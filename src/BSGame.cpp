@@ -1,4 +1,5 @@
 #include "BSGame.h"
+#include "BSIsometricBitmaps.h"
 
 // Shipnames
 const char* shipNameForLength(uint8_t length){
@@ -19,6 +20,7 @@ BSGame::BSGame(){
   arduboy.setFrameRate(60);
   arduboy.initRandomSeed();
   arduboy.audio.on();
+  arduboy.invert(true);
   gameState = BSGameStateMenu;
 }
 
@@ -118,34 +120,73 @@ bool BSGame::detectShipCollisionOnMap(uint8_t posX, uint8_t posY, uint8_t length
 
 //
 void BSGame::drawMapAtPosition(uint16_t posX, uint16_t posY, uint16_t playerMap[BS_MAP_SIZE][BS_MAP_SIZE], bool drawShips){
+
+  // stores the current maptile
+  uint16_t mapTile = 0;
+  Point drawPosition = {0,0};
+
   // draw map
   for (uint8_t i = 0; i < BS_MAP_SIZE; i++) {
     for (uint8_t j = 0; j < BS_MAP_SIZE; j++) {
+      mapTile = MAP_TILE_TYPE(playerMap[i][j]);
 
-      tinyfont.setCursor(posX + i*6, posY + j*6);
+      drawPosition.x = posX - j*16 + i*16;
+      drawPosition.y = posY + j*8 + i*8;
 
+      // draw wireframe
+      ardbitmap.drawCompressed(drawPosition.x, drawPosition.y, BitmapWireframeTop, WHITE, ALIGN_H_LEFT, MIRROR_NONE);
 
       // Check for mountain
-      if ((MAP_TILE_TYPE(playerMap[i][j]) == MAP_TILE_TYPE_MOUNTAIN) != 0)
-        tinyfont.print("X");
+      if ((mapTile == MAP_TILE_TYPE_MOUNTAIN) != 0){
+        ardbitmap.drawCompressed(drawPosition.x, drawPosition.y, BitmapMountainMask, BLACK, ALIGN_H_LEFT, MIRROR_NONE);
+        ardbitmap.drawCompressed(drawPosition.x, drawPosition.y, BitmapMountain, WHITE, ALIGN_H_LEFT, MIRROR_NONE);
+      }
 
       // Check for Ship
-      else if ( MAP_TILE_TYPE(playerMap[i][j]) == MAP_TILE_TYPE_SHIP){
+      else if ( mapTile == MAP_TILE_TYPE_SHIP){
 
         // don't draw
         if (!drawShips) continue;
 
-        // Check if vertical
-        if ( (playerMap[i][j] & MAP_FLAG_IS_VERTICAL) != 0)
-          tinyfont.print("v");
-        else
-          tinyfont.print(">");
+        bool isVertical = (playerMap[i][j] & MAP_FLAG_IS_VERTICAL) != 0;
+
+        ardbitmap.drawCompressed(drawPosition.x, drawPosition.y, BitmapShipMiddleMask, BLACK, ALIGN_H_LEFT, isVertical?MIRROR_NONE:MIRROR_VERTICAL);
+        ardbitmap.drawCompressed(drawPosition.x, drawPosition.y, BitmapShipMiddle, WHITE, ALIGN_H_LEFT, isVertical?MIRROR_NONE:MIRROR_VERTICAL);
+
       }
-      else
-        tinyfont.print(".");
     }
   }
 }
+
+// void BSGame::drawMapAtPosition(uint16_t posX, uint16_t posY, uint16_t playerMap[BS_MAP_SIZE][BS_MAP_SIZE], bool drawShips){
+//   // draw map
+//   for (uint8_t i = 0; i < BS_MAP_SIZE; i++) {
+//     for (uint8_t j = 0; j < BS_MAP_SIZE; j++) {
+//
+//       tinyfont.setCursor(posX + i*6, posY + j*6);
+//
+//
+//       // Check for mountain
+//       if ((MAP_TILE_TYPE(playerMap[i][j]) == MAP_TILE_TYPE_MOUNTAIN) != 0)
+//         tinyfont.print("X");
+//
+//       // Check for Ship
+//       else if ( MAP_TILE_TYPE(playerMap[i][j]) == MAP_TILE_TYPE_SHIP){
+//
+//         // don't draw
+//         if (!drawShips) continue;
+//
+//         // Check if vertical
+//         if ( (playerMap[i][j] & MAP_FLAG_IS_VERTICAL) != 0)
+//           tinyfont.print("v");
+//         else
+//           tinyfont.print(">");
+//       }
+//       else
+//         tinyfont.print(".");
+//     }
+//   }
+// }
 
 
 /// Draws a ship with the given settings

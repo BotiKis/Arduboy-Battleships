@@ -2,6 +2,7 @@
 #define GAME_H
 #include <Arduboy2.h>
 #include <Tinyfont.h>
+#include "BSArdBitmap.h"
 
 // -------------------------------------------------------
 // MAP Flags
@@ -92,7 +93,8 @@ private:
     // ======================
     // Data
     Arduboy2 arduboy;
-    Tinyfont tinyfont = Tinyfont(arduboy.sBuffer, Arduboy2::width(), Arduboy2::height());
+    ArdBitmap ardbitmap = ArdBitmap(arduboy.getBuffer(), Arduboy2::width(), Arduboy2::height());
+    Tinyfont tinyfont = Tinyfont(arduboy.getBuffer(), Arduboy2::width(), Arduboy2::height());
     BSGameState gameState;
     Point cursorPosition;
 

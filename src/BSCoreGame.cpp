@@ -1,7 +1,5 @@
 #include "BSGame.h"
 
-
-
 void BSGame::resetGame(){
 
   // clean map
@@ -28,6 +26,7 @@ void BSGame::resetGame(){
 }
 
 void BSGame::showPlaceShips(){
+  // Shipdata for players
   uint8_t tempShipList[BS_SHIPS_PER_PLAYER] = {2,2,2,3,3,4,5,0};
 
   // get number of ships
@@ -35,6 +34,9 @@ void BSGame::showPlaceShips(){
   for (uint8_t i = 0; i < BS_SHIPS_PER_PLAYER; i++) {
     if(tempShipList[i] > 0) trueShipCount++;
   }
+
+  // point where the map will be drawn
+  Point cameraPosition = {0,0};
 
   // verticality
   bool placeVertical = false;
@@ -71,22 +73,22 @@ void BSGame::showPlaceShips(){
       }
 
       // Move cursor
-      if (arduboy.pressed(DOWN_BUTTON)){
+      if (arduboy.everyXFrames(2) && arduboy.pressed(DOWN_BUTTON)){
         cursorPosition.y++;
       }
-      if (arduboy.pressed(UP_BUTTON)){
+      if (arduboy.everyXFrames(2) && arduboy.pressed(UP_BUTTON)){
         cursorPosition.y--;
       }
-      if (arduboy.pressed(LEFT_BUTTON)){
+      if (arduboy.everyXFrames(2) && arduboy.pressed(LEFT_BUTTON)){
         cursorPosition.x--;
       }
-      if (arduboy.pressed(RIGHT_BUTTON)){
+      if (arduboy.everyXFrames(2) && arduboy.pressed(RIGHT_BUTTON)){
         cursorPosition.x++;
       }
       cursorPosition.x = max(cursorPosition.x, 0);
-      cursorPosition.x = min(cursorPosition.x, BS_MAP_SIZE - (placeVertical?1:currentShipLength));
+      cursorPosition.x = min(cursorPosition.x, BS_MAP_SIZE-1);// - (placeVertical?1:currentShipLength));
       cursorPosition.y = max(cursorPosition.y, 0);
-      cursorPosition.y = min(cursorPosition.y, BS_MAP_SIZE - (placeVertical?currentShipLength:1));
+      cursorPosition.y = min(cursorPosition.y, BS_MAP_SIZE-1);// - (placeVertical?currentShipLength:1));
 
       // wait for next frame with drawing
       if (!arduboy.nextFrame()) continue;
@@ -95,9 +97,14 @@ void BSGame::showPlaceShips(){
       arduboy.clear();
 
       // Map
-      //drawMapAtPosition(2, 2, player1Map, true);
-      drawMapAtPosition(2, 2, player1Map, true);
-      drawShipAtPosition(2 + cursorPosition.x * 6, 2 + cursorPosition.y * 6, currentShipLength, placeVertical);
+      cameraPosition.x = (cursorPosition.x*32);
+      cameraPosition.y = (8 - cursorPosition.y*16);
+      drawMapAtPosition(cameraPosition.x, cameraPosition.y, player1Map, true);
+      //drawShipAtPosition(2 + cursorPosition.x * 6, 2 + cursorPosition.y * 6, currentShipLength, placeVertical);
+      tinyfont.setCursor(102,20);
+      tinyfont.print(cursorPosition.x);
+      tinyfont.setCursor(110,20);
+      tinyfont.print(cursorPosition.y);
 
       // Infobox
       arduboy.fillRect(73,0,55,19,WHITE);
