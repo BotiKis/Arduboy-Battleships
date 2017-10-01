@@ -1,4 +1,5 @@
 #include "BSGame.h"
+#include "BSIsometricBitmaps.h"
 
 void BSGame::resetGame(){
 
@@ -37,9 +38,13 @@ void BSGame::showPlaceShips(){
 
   // point where the map will be drawn
   Point cameraPosition = {0,0};
+  static const Point mapOrigin = {26, 0};
 
   // verticality
   bool placeVertical = false;
+
+  // animatiors
+  bool animatorCursor = false;
 
   while (trueShipCount > 0) {
     uint8_t currentShipLength = tempShipList[trueShipCount-1];
@@ -73,38 +78,43 @@ void BSGame::showPlaceShips(){
       }
 
       // Move cursor
-      if (arduboy.everyXFrames(2) && arduboy.pressed(DOWN_BUTTON)){
+      if (arduboy.justPressed(DOWN_BUTTON)){
         cursorPosition.y++;
       }
-      if (arduboy.everyXFrames(2) && arduboy.pressed(UP_BUTTON)){
+      if (arduboy.justPressed(UP_BUTTON)){
         cursorPosition.y--;
       }
-      if (arduboy.everyXFrames(2) && arduboy.pressed(LEFT_BUTTON)){
+      if (arduboy.justPressed(LEFT_BUTTON)){
         cursorPosition.x--;
       }
-      if (arduboy.everyXFrames(2) && arduboy.pressed(RIGHT_BUTTON)){
+      if (arduboy.justPressed(RIGHT_BUTTON)){
         cursorPosition.x++;
       }
       cursorPosition.x = max(cursorPosition.x, 0);
-      cursorPosition.x = min(cursorPosition.x, BS_MAP_SIZE-1);// - (placeVertical?1:currentShipLength));
+      cursorPosition.x = min(cursorPosition.x, BS_MAP_SIZE-1);
       cursorPosition.y = max(cursorPosition.y, 0);
-      cursorPosition.y = min(cursorPosition.y, BS_MAP_SIZE-1);// - (placeVertical?currentShipLength:1));
+      cursorPosition.y = min(cursorPosition.y, BS_MAP_SIZE-1);
 
       // wait for next frame with drawing
       if (!arduboy.nextFrame()) continue;
+
+      // handle animators
+      // cursor
+      if (arduboy.everyXFrames(3)) animatorCursor = !animatorCursor;
 
       // Drawing
       arduboy.clear();
 
       // Map
-      cameraPosition.x = (cursorPosition.x*32);
-      cameraPosition.y = (8 - cursorPosition.y*16);
+      // tile height is 32 and width 16, all sprites are 32x32 for simplicity and overdrawing
+      cameraPosition.x = mapOrigin.x - (cursorPosition.x - cursorPosition.y)*16;
+      cameraPosition.y = mapOrigin.y - (cursorPosition.x + cursorPosition.y)*8;
       drawMapAtPosition(cameraPosition.x, cameraPosition.y, player1Map, true);
-      //drawShipAtPosition(2 + cursorPosition.x * 6, 2 + cursorPosition.y * 6, currentShipLength, placeVertical);
-      tinyfont.setCursor(102,20);
-      tinyfont.print(cursorPosition.x);
-      tinyfont.setCursor(110,20);
-      tinyfont.print(cursorPosition.y);
+
+      // draw cursor
+      if(animatorCursor) ardbitmap.drawCompressed(mapOrigin.x, mapOrigin.y, BitmapCursorFull, WHITE, ALIGN_H_LEFT, MIRROR_NONE);
+
+      //drawShipAtPosition(mapOrigin.x, mapOrigin.y, currentShipLength, placeVertical);
 
       // Infobox
       arduboy.fillRect(73,0,55,19,WHITE);

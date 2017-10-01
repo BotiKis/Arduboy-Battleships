@@ -143,69 +143,77 @@ void BSGame::drawMapAtPosition(uint16_t posX, uint16_t posY, uint16_t playerMap[
       }
 
       // Check for Ship
-      else if ( mapTile == MAP_TILE_TYPE_SHIP){
+      else if (mapTile == MAP_TILE_TYPE_SHIP){
 
         // don't draw
         if (!drawShips) continue;
 
         bool isVertical = (playerMap[i][j] & MAP_FLAG_IS_VERTICAL) != 0;
 
-        ardbitmap.drawCompressed(drawPosition.x, drawPosition.y, BitmapShipMiddleMask, BLACK, ALIGN_H_LEFT, isVertical?MIRROR_NONE:MIRROR_VERTICAL);
-        ardbitmap.drawCompressed(drawPosition.x, drawPosition.y, BitmapShipMiddle, WHITE, ALIGN_H_LEFT, isVertical?MIRROR_NONE:MIRROR_VERTICAL);
+        uint8_t shipLength = MAP_SHIPLENGTH(mapTile);
+        uint8_t tileIdx = MAP_SHIPTILE_INDEX(mapTile);
+
+        unsigned const char *shipSprite = NULL;
+        unsigned const char *shipMaskSprite = NULL;
+
+        if (tileIdx == 0) {
+          // Ship rear
+          shipSprite = BitmapShipEnd;
+          shipMaskSprite = BitmapShipEndMask;
+        }
+        else if (tileIdx == shipLength-1) {
+          // ship front
+          shipSprite = BitmapShipFront;
+          shipMaskSprite = BitmapShipFrontMask;
+        }
+        else{
+          // Middle
+          shipSprite = BitmapShipMiddle;
+          shipMaskSprite = BitmapShipMiddleMask;
+        }
+
+        ardbitmap.drawCompressed(drawPosition.x, drawPosition.y, shipMaskSprite, BLACK, ALIGN_H_LEFT, isVertical?MIRROR_NONE:MIRROR_HORIZONTAL);
+        ardbitmap.drawCompressed(drawPosition.x, drawPosition.y, shipSprite, WHITE, ALIGN_H_LEFT, isVertical?MIRROR_NONE:MIRROR_HORIZONTAL);
 
       }
     }
   }
 }
 
-// void BSGame::drawMapAtPosition(uint16_t posX, uint16_t posY, uint16_t playerMap[BS_MAP_SIZE][BS_MAP_SIZE], bool drawShips){
-//   // draw map
-//   for (uint8_t i = 0; i < BS_MAP_SIZE; i++) {
-//     for (uint8_t j = 0; j < BS_MAP_SIZE; j++) {
-//
-//       tinyfont.setCursor(posX + i*6, posY + j*6);
-//
-//
-//       // Check for mountain
-//       if ((MAP_TILE_TYPE(playerMap[i][j]) == MAP_TILE_TYPE_MOUNTAIN) != 0)
-//         tinyfont.print("X");
-//
-//       // Check for Ship
-//       else if ( MAP_TILE_TYPE(playerMap[i][j]) == MAP_TILE_TYPE_SHIP){
-//
-//         // don't draw
-//         if (!drawShips) continue;
-//
-//         // Check if vertical
-//         if ( (playerMap[i][j] & MAP_FLAG_IS_VERTICAL) != 0)
-//           tinyfont.print("v");
-//         else
-//           tinyfont.print(">");
-//       }
-//       else
-//         tinyfont.print(".");
-//     }
-//   }
-// }
-
-
 /// Draws a ship with the given settings
 void BSGame::drawShipAtPosition(uint16_t posX, uint16_t posY, uint8_t length, bool vertical){
 
   uint8_t x, y;
+
+  unsigned const char *shipSprite = NULL;
+  unsigned const char *shipMaskSprite = NULL;
+
   for (uint8_t i = 0; i < length; i++) {
 
     // add index offset to coords
-    x = posX + (vertical?0:i*6);
-    y = posY + (vertical?i*6:0);
+    x = posX + (i * (vertical?-1:1) * 16);
+    y = posY + (i * 8);
 
-    tinyfont.setCursor(x, y);
 
-    // Check if vertical
-    if (vertical)
-      tinyfont.print("v");
-    else
-      tinyfont.print(">");
+    if (i == 0) {
+      // Ship rear
+      shipSprite = BitmapShipEnd;
+      shipMaskSprite = BitmapShipEndMask;
+    }
+    else if (i == length-1) {
+      // ship front
+      shipSprite = BitmapShipFront;
+      shipMaskSprite = BitmapShipFrontMask;
+    }
+    else{
+      // Middle
+      shipSprite = BitmapShipMiddle;
+      shipMaskSprite = BitmapShipMiddleMask;
+    }
+
+    // // Check if vertical
+    ardbitmap.drawCompressed(x, y, shipMaskSprite, BLACK, ALIGN_H_LEFT, vertical?MIRROR_NONE:MIRROR_HORIZONTAL);
+    ardbitmap.drawCompressed(x, y, shipSprite, WHITE, ALIGN_H_LEFT, vertical?MIRROR_NONE:MIRROR_HORIZONTAL);
   }
 }
 
@@ -247,7 +255,7 @@ void BSGame::writeShipToMap(uint8_t posX, uint8_t posY, uint16_t playerMap[BS_MA
     if (vertical) tileData |= MAP_FLAG_IS_VERTICAL;
 
     // write to map
-    player1Map[x][y] = tileData;
+    playerMap[x][y] = tileData;
 
 
     printMapTileBinary(45, 59, tileData);
