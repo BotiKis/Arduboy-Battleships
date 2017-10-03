@@ -1,5 +1,6 @@
 #include "BSGame.h"
 #include "BSIsometricBitmaps.h"
+#include "BSMapTileData.h"
 
 // Shipnames
 const char* shipNameForLength(uint8_t length){
@@ -95,40 +96,38 @@ void BSGame::startNewGame(){
   showPlaceShips();
 }
 
-bool BSGame::detectShipCollisionOnMap(uint8_t posX, uint8_t posY, uint8_t length, bool vertical){
+void BSGame::resetGame(){
 
-  // check for out of bounds
-  if (posX < 0 ||
-      posY < 0 ||
-      (posX + (vertical?0:length-1)) >= BS_MAP_SIZE ||
-      (posY + (vertical?length-1:0)) >= BS_MAP_SIZE) return true;
+  player1.resetPlayer();
 
-  // check for mountains or other ships on the map
-  uint8_t x, y;
-  for (uint8_t i = 0; i < length; i++) {
-
-    // add index offset to coords
-    x = posX + (vertical?0:i);
-    y = posY + (vertical?i:0);
-
-    // check for mountain
-    if(MAP_TILE_TYPE(player1Map[x][y]) == MAP_TILE_TYPE_MOUNTAIN) return true;
-    if(MAP_TILE_TYPE(player1Map[x][y]) == MAP_TILE_TYPE_SHIP) return true;
+  // place random mountains
+  for (uint8_t i = 0; i < 3;) {
+    /* code */
+    uint8_t posX = random(BS_MAP_SIZE);
+    uint8_t posY = random(BS_MAP_SIZE);
+    if (MAP_TILE_TYPE(player1.getMapTileAtPosition(posX, posY)) != MAP_TILE_TYPE_MOUNTAIN) {
+      player1.setMapTileAtPosition(posX, posY, (MAP_TILE_TYPE_MOUNTAIN << MAP_TILE_TYPE_POS)); // set to mountain
+      i++;
+    }
   }
-  return false;
+
+  // reset cursor
+  cursorPosition = {0,0};
 }
 
 //
-void BSGame::drawMapAtPosition(uint16_t posX, uint16_t posY, uint16_t playerMap[BS_MAP_SIZE][BS_MAP_SIZE], bool drawShips){
+void BSGame::drawMapAtPosition(int16_t posX, int16_t posY, BSPlayer *aPlayer, bool drawShips){
 
   // stores the current maptile
   uint16_t mapTile = 0;
+  uint16_t mapTileType = 0;
   Point drawPosition = {0,0};
 
   // draw map
   for (uint8_t i = 0; i < BS_MAP_SIZE; i++) {
     for (uint8_t j = 0; j < BS_MAP_SIZE; j++) {
-      mapTile = MAP_TILE_TYPE(playerMap[i][j]);
+      mapTile = aPlayer->getMapTileAtPosition(j,i);
+      mapTileType = MAP_TILE_TYPE(mapTile);
 
       drawPosition.x = posX - j*16 + i*16;
       drawPosition.y = posY + j*8 + i*8;
@@ -137,18 +136,18 @@ void BSGame::drawMapAtPosition(uint16_t posX, uint16_t posY, uint16_t playerMap[
       ardbitmap.drawCompressed(drawPosition.x, drawPosition.y, BitmapWireframeTop, WHITE, ALIGN_H_LEFT, MIRROR_NONE);
 
       // Check for mountain
-      if ((mapTile == MAP_TILE_TYPE_MOUNTAIN) != 0){
+      if (mapTileType == MAP_TILE_TYPE_MOUNTAIN){
         ardbitmap.drawCompressed(drawPosition.x, drawPosition.y, BitmapMountainMask, BLACK, ALIGN_H_LEFT, MIRROR_NONE);
         ardbitmap.drawCompressed(drawPosition.x, drawPosition.y, BitmapMountain, WHITE, ALIGN_H_LEFT, MIRROR_NONE);
       }
 
       // Check for Ship
-      else if (mapTile == MAP_TILE_TYPE_SHIP){
+      else if (mapTileType == MAP_TILE_TYPE_SHIP){
 
         // don't draw
         if (!drawShips) continue;
 
-        bool isVertical = (playerMap[i][j] & MAP_FLAG_IS_VERTICAL) != 0;
+        bool isVertical = (mapTile & MAP_FLAG_IS_VERTICAL) != 0;
 
         uint8_t shipLength = MAP_SHIPLENGTH(mapTile);
         uint8_t tileIdx = MAP_SHIPTILE_INDEX(mapTile);
@@ -181,9 +180,9 @@ void BSGame::drawMapAtPosition(uint16_t posX, uint16_t posY, uint16_t playerMap[
 }
 
 /// Draws a ship with the given settings
-void BSGame::drawShipAtPosition(uint16_t posX, uint16_t posY, uint8_t length, bool vertical){
+void BSGame::drawShipAtPosition(int16_t posX, int16_t posY, uint8_t length, bool vertical){
 
-  uint8_t x, y;
+  int8_t x, y;
 
   unsigned const char *shipSprite = NULL;
   unsigned const char *shipMaskSprite = NULL;
@@ -227,39 +226,24 @@ void BSGame::printMapTileBinary(uint8_t posX, uint8_t posY, uint16_t val){
   tinyfont.print(buff);
 }
 
-void BSGame::writeShipToMap(uint8_t posX, uint8_t posY, uint16_t playerMap[BS_MAP_SIZE][BS_MAP_SIZE], uint8_t length, uint8_t shipIndex , bool vertical){
-  uint8_t x, y;
-  for (uint8_t i = 0; i < length; i++) {
 
-    // add index offset to coords
-    x = posX + (vertical?0:i);
-    y = posY + (vertical?i:0);
-
-
-    // Create tile data
-    uint16_t tileData = 0;
-
-    // tile type
-    tileData |= (MAP_TILE_TYPE_SHIP << MAP_TILE_TYPE_POS);
-
-    // Ships index
-    tileData |= ( (shipIndex & 0b111) << MAP_SHIP_INDEX_BIT_POS);
-
-    // ship length
-    tileData |= ( (length & 0b111) << MAP_SHIPLENGTH_BIT_POS);
-
-    // tile index
-    tileData |= ( (i & 0b111) << MAP_SHIPTILE_INDEX_BIT_POS);
-
-    // vertical
-    if (vertical) tileData |= MAP_FLAG_IS_VERTICAL;
-
-    // write to map
-    playerMap[x][y] = tileData;
-
-
-    printMapTileBinary(45, 59, tileData);
-    arduboy.display();
-    delay(1000);
-  }
-}
+        // char buff[32] = {'\0'};
+        // sprintf(buff, "sIdx:\t%d\nsL  :\t%d\ntIdx:\t%d", shipIdx, shipLength, tileIdx);
+        // static Point infoOrigin = {40, 0};
+        //
+        // while(1){
+        //   arduboy.pollButtons();
+        //
+        //   if (arduboy.justPressed(B_BUTTON)) break;
+        //   arduboy.clear();
+        //
+        //   // Infobox
+        //   arduboy.fillRect(infoOrigin.x, infoOrigin.y, WIDTH-infoOrigin.x, 24,WHITE);
+        //   arduboy.fillRect(infoOrigin.x+1, infoOrigin.y+1, WIDTH-infoOrigin.x-1, 22,BLACK);
+        //   tinyfont.setCursor(infoOrigin.x+3, infoOrigin.y+3);
+        //   tinyfont.print(buff);
+        //
+        //   printMapTileBinary(infoOrigin.x+3, infoOrigin.y+19, mapTile);
+        //
+        //   arduboy.display();
+        // }

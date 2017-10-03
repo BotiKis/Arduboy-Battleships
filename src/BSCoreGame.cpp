@@ -1,30 +1,6 @@
 #include "BSGame.h"
 #include "BSIsometricBitmaps.h"
-
-void BSGame::resetGame(){
-
-  // clean map
-  for (uint8_t i = 0; i < BS_MAP_SIZE; i++) {
-    for (uint8_t j = 0; j < BS_MAP_SIZE; j++) {
-      player1Map[i][j] = 0x00;
-      player2Map[i][j] = 0x00;
-    }
-  }
-
-  // place random mountains
-  for (uint8_t i = 0; i < 3;) {
-    /* code */
-    uint8_t posX = random(10);
-    uint8_t posY = random(10);
-    if (MAP_TILE_TYPE(player1Map[posX][posY]) != MAP_TILE_TYPE_MOUNTAIN) {
-      player1Map[posX][posY] |= (MAP_TILE_TYPE_MOUNTAIN << MAP_TILE_TYPE_POS); // set to mountain
-      i++;
-    }
-  }
-
-  // reset cursor
-  cursorPosition = {0,0};
-}
+#include "BSMapTileData.h"
 
 void BSGame::showPlaceShips(){
   // Shipdata for players
@@ -57,9 +33,9 @@ void BSGame::showPlaceShips(){
 
       // Handle ship placement
       if (arduboy.justPressed(B_BUTTON)){
-        if (!detectShipCollisionOnMap(cursorPosition.x, cursorPosition.y, currentShipLength, placeVertical)) {
+        if (!player1.detectShipCollisionOnMap(cursorPosition.x, cursorPosition.y, currentShipLength, placeVertical)) {
           // place ship
-          writeShipToMap(cursorPosition.x, cursorPosition.y, player1Map, currentShipLength, trueShipCount-1, placeVertical);
+          player1.writeShipToMap(cursorPosition.x, cursorPosition.y, currentShipLength, trueShipCount-1, placeVertical);
 
           trueShipCount--;
           break;
@@ -109,12 +85,12 @@ void BSGame::showPlaceShips(){
       // tile height is 32 and width 16, all sprites are 32x32 for simplicity and overdrawing
       cameraPosition.x = mapOrigin.x - (cursorPosition.x - cursorPosition.y)*16;
       cameraPosition.y = mapOrigin.y - (cursorPosition.x + cursorPosition.y)*8;
-      drawMapAtPosition(cameraPosition.x, cameraPosition.y, player1Map, true);
+      drawMapAtPosition(cameraPosition.x, cameraPosition.y, &player1, true);
 
       // draw cursor
       if(animatorCursor) ardbitmap.drawCompressed(mapOrigin.x, mapOrigin.y, BitmapCursorFull, WHITE, ALIGN_H_LEFT, MIRROR_NONE);
 
-      //drawShipAtPosition(mapOrigin.x, mapOrigin.y, currentShipLength, placeVertical);
+      drawShipAtPosition(mapOrigin.x, mapOrigin.y, currentShipLength, placeVertical);
 
       // Infobox
       arduboy.fillRect(73,0,55,19,WHITE);
