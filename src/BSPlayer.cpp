@@ -42,6 +42,17 @@ void BSPlayer::resetPlayer(){
       playerMap[i][j] = 0x00;
     }
   }
+
+  // place random mountains
+  for (uint8_t i = 0; i < 3;) {
+    /* code */
+    uint8_t posX = random(BS_MAP_SIZE);
+    uint8_t posY = random(BS_MAP_SIZE);
+    if (MAP_TILE_TYPE(getMapTileAtPosition(posX, posY)) != MAP_TILE_TYPE_MOUNTAIN) {
+      setMapTileAtPosition(posX, posY, (MAP_TILE_TYPE_MOUNTAIN << MAP_TILE_TYPE_POS)); // set to mountain
+      i++;
+    }
+  }
 }
 
 bool BSPlayer::detectShipCollisionOnMap(uint8_t posX, uint8_t posY, uint8_t length, bool vertical){

@@ -33,9 +33,9 @@ private:
 
     // Game methods
     BSGameState showMenu();
-    void startNewGame();
+    void startNewSinglePlayerGame();
     void resetGame();
-    void showPlaceShips();
+    void showPlaceShipsForPlayer(BSPlayer *aPlayer);
 
     // draws the map of a given player to the screen
     void drawMapAtPosition(int16_t posX, int16_t posY, BSPlayer *aPlayer, bool drawShips);
@@ -46,6 +46,8 @@ private:
     // DEBUG
     void printMapTileBinary(uint8_t posX, uint8_t posY, uint16_t val);
 
+    void createMapForAI();
+
     // ======================
     // Data
     Arduboy2 arduboy;
@@ -53,6 +55,9 @@ private:
     Tinyfont tinyfont = Tinyfont(arduboy.getBuffer(), Arduboy2::width(), Arduboy2::height());
     BSGameState gameState;
     Point cursorPosition;
+
+      // Shipdata for players
+      uint8_t const playerShipList[BS_SHIPS_PER_PLAYER] = {2,3,4,5,0,0,0,0};
 
     // players
     float gameMapZoom;

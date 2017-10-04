@@ -37,7 +37,16 @@ void BSGame::run(){
 
       switch (gameState) {
         case BSGameStatePlayingSinglePlayer:{
-          startNewGame();
+          // reset Game
+          resetGame();
+
+          // place ships
+          showPlaceShipsForPlayer(&player1);
+          createMapForAI();
+
+          // start game
+          startNewSinglePlayerGame();
+          
           break;
         }
         case BSGameStateMenu:
@@ -90,30 +99,10 @@ BSGameState BSGame::showMenu(){
   }
 }
 
-
-void BSGame::startNewGame(){
-
-  // reset Game
-  resetGame();
-
-  // place ships
-  showPlaceShips();
-}
-
 void BSGame::resetGame(){
 
   player1.resetPlayer();
-
-  // place random mountains
-  for (uint8_t i = 0; i < 3;) {
-    /* code */
-    uint8_t posX = random(BS_MAP_SIZE);
-    uint8_t posY = random(BS_MAP_SIZE);
-    if (MAP_TILE_TYPE(player1.getMapTileAtPosition(posX, posY)) != MAP_TILE_TYPE_MOUNTAIN) {
-      player1.setMapTileAtPosition(posX, posY, (MAP_TILE_TYPE_MOUNTAIN << MAP_TILE_TYPE_POS)); // set to mountain
-      i++;
-    }
-  }
+  player2.resetPlayer();
 
   // reset cursor
   cursorPosition = {0,0};

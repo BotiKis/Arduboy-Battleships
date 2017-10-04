@@ -2,14 +2,12 @@
 #include "BSIsometricBitmaps.h"
 #include "BSMapTileData.h"
 
-void BSGame::showPlaceShips(){
-  // Shipdata for players
-  uint8_t tempShipList[BS_SHIPS_PER_PLAYER] = {2,2,2,3,3,4,5,0};
+void BSGame::showPlaceShipsForPlayer(BSPlayer *aPlayer){
 
   // get number of ships
-  int8_t trueShipCount = 0;
+  int8_t shipCount = 0;
   for (uint8_t i = 0; i < BS_SHIPS_PER_PLAYER; i++) {
-    if(tempShipList[i] > 0) trueShipCount++;
+    if(playerShipList[i] > 0) shipCount++;
   }
 
   // point where the map will be drawn
@@ -22,8 +20,8 @@ void BSGame::showPlaceShips(){
   // animatiors
   bool animatorCursor = false;
 
-  while (trueShipCount > 0) {
-    uint8_t currentShipLength = tempShipList[trueShipCount-1];
+  while (shipCount > 0) {
+    uint8_t currentShipLength = playerShipList[shipCount-1];
 
     // Game loop
     while(true){
@@ -33,11 +31,11 @@ void BSGame::showPlaceShips(){
 
       // Handle ship placement
       if (arduboy.justPressed(B_BUTTON)){
-        if (!player1.detectShipCollisionOnMap(cursorPosition.x, cursorPosition.y, currentShipLength, placeVertical)) {
+        if (!aPlayer->detectShipCollisionOnMap(cursorPosition.x, cursorPosition.y, currentShipLength, placeVertical)) {
           // place ship
-          player1.writeShipToMap(cursorPosition.x, cursorPosition.y, currentShipLength, trueShipCount-1, placeVertical);
+          aPlayer->writeShipToMap(cursorPosition.x, cursorPosition.y, currentShipLength, shipCount-1, placeVertical);
 
-          trueShipCount--;
+          shipCount--;
           break;
         }
         else{
@@ -85,7 +83,7 @@ void BSGame::showPlaceShips(){
       // tile height is 32 and width 16, all sprites are 32x32 for simplicity and overdrawing
       cameraPosition.x = mapOrigin.x - (cursorPosition.x - cursorPosition.y)*16*gameMapZoom;
       cameraPosition.y = mapOrigin.y - (cursorPosition.x + cursorPosition.y)*8*gameMapZoom;
-      drawMapAtPosition(cameraPosition.x, cameraPosition.y, &player1, true);
+      drawMapAtPosition(cameraPosition.x, cameraPosition.y, aPlayer, true);
 
       // draw cursor
       if(animatorCursor) ardbitmap.drawCompressedResized(mapOrigin.x, mapOrigin.y, BitmapCursorFull, WHITE, ALIGN_H_LEFT, MIRROR_NONE, gameMapZoom);
@@ -105,6 +103,109 @@ void BSGame::showPlaceShips(){
 
       arduboy.display();
     }
+  }
+}
+
+
+void BSGame::createMapForAI(){
+  player2.resetPlayer();
+
+  // get number of ships
+  int8_t shipCount = 0;
+  for (uint8_t i = 0; i < BS_SHIPS_PER_PLAYER; i++) {
+    if(playerShipList[i] > 0) shipCount++;
+  }
+
+  // verticality
+  bool placeVertical = false;
+  Point shipPos = {0,0};
+
+  while (shipCount > 0) {
+    // get ship length
+    uint8_t currentShipLength = playerShipList[shipCount-1];
+
+    // randomize positions
+    shipPos.x = random(BS_MAP_SIZE);
+    shipPos.y = random(BS_MAP_SIZE);
+    placeVertical = (random()%2) == 0;
+
+    // place ship
+    if (!player2.detectShipCollisionOnMap(shipPos.x, shipPos.y, currentShipLength, placeVertical)) {
+      // place ship
+      player2.writeShipToMap(shipPos.x, shipPos.y, currentShipLength, shipCount-1, placeVertical);
+
+      shipCount--;
+    }
+  }
+
+}
+
+void BSGame::startNewSinglePlayerGame(){
+
+  // point where the map will be drawn
+  Point cameraPosition = {0,0};
+  static const Point mapOrigin = {26, 0};
+
+  // animatiors
+  bool animatorCursor = false;
+
+  // Game loop
+  while(true){
+
+    // Get input
+    arduboy.pollButtons();
+
+    if (arduboy.justPressed(B_BUTTON)){
+
+    }
+    if (arduboy.justPressed(A_BUTTON)){
+    }
+
+    // Move cursor
+    if (arduboy.justPressed(DOWN_BUTTON)){
+      cursorPosition.y++;
+    }
+    if (arduboy.justPressed(UP_BUTTON)){
+      cursorPosition.y--;
+    }
+    if (arduboy.justPressed(LEFT_BUTTON)){
+      cursorPosition.x--;
+    }
+    if (arduboy.justPressed(RIGHT_BUTTON)){
+      cursorPosition.x++;
+    }
+    cursorPosition.x = max(cursorPosition.x, 0);
+    cursorPosition.x = min(cursorPosition.x, BS_MAP_SIZE-1);
+    cursorPosition.y = max(cursorPosition.y, 0);
+    cursorPosition.y = min(cursorPosition.y, BS_MAP_SIZE-1);
+
+    // wait for next frame with drawing
+    if (!arduboy.nextFrame()) continue;
+
+    // handle animators
+    // cursor
+    if (arduboy.everyXFrames(3)) animatorCursor = !animatorCursor;
+
+    // Drawing
+    arduboy.clear();
+
+    // Map
+    // tile height is 32 and width 16, all sprites are 32x32 for simplicity and overdrawing
+    cameraPosition.x = mapOrigin.x - (cursorPosition.x - cursorPosition.y)*16*gameMapZoom;
+    cameraPosition.y = mapOrigin.y - (cursorPosition.x + cursorPosition.y)*8*gameMapZoom;
+    drawMapAtPosition(cameraPosition.x, cameraPosition.y, &player1, false);
+
+    // draw cursor
+    if(animatorCursor) ardbitmap.drawCompressedResized(mapOrigin.x, mapOrigin.y, BitmapCursorFull, WHITE, ALIGN_H_LEFT, MIRROR_NONE, gameMapZoom);
+
+
+    // Infobox
+    arduboy.fillRect(73,0,55,19,WHITE);
+    arduboy.fillRect(74,0,54,18,BLACK);
+    tinyfont.setCursor(76,3);
+    tinyfont.print(F("Player 1\nturn"));
+
+    arduboy.display();
   }
 
 }
