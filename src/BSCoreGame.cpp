@@ -83,12 +83,12 @@ void BSGame::showPlaceShips(){
 
       // Map
       // tile height is 32 and width 16, all sprites are 32x32 for simplicity and overdrawing
-      cameraPosition.x = mapOrigin.x - (cursorPosition.x - cursorPosition.y)*16;
-      cameraPosition.y = mapOrigin.y - (cursorPosition.x + cursorPosition.y)*8;
+      cameraPosition.x = mapOrigin.x - (cursorPosition.x - cursorPosition.y)*16*gameMapZoom;
+      cameraPosition.y = mapOrigin.y - (cursorPosition.x + cursorPosition.y)*8*gameMapZoom;
       drawMapAtPosition(cameraPosition.x, cameraPosition.y, &player1, true);
 
       // draw cursor
-      if(animatorCursor) ardbitmap.drawCompressed(mapOrigin.x, mapOrigin.y, BitmapCursorFull, WHITE, ALIGN_H_LEFT, MIRROR_NONE);
+      if(animatorCursor) ardbitmap.drawCompressedResized(mapOrigin.x, mapOrigin.y, BitmapCursorFull, WHITE, ALIGN_H_LEFT, MIRROR_NONE, gameMapZoom);
 
       drawShipAtPosition(mapOrigin.x, mapOrigin.y, currentShipLength, placeVertical);
 

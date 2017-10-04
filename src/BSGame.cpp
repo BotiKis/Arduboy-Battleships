@@ -23,6 +23,7 @@ BSGame::BSGame(){
   arduboy.audio.on();
   arduboy.invert(true);
   gameState = BSGameStateMenu;
+  gameMapZoom = 1;
 }
 
 // -------------------------------------------------------
@@ -35,13 +36,13 @@ void BSGame::run(){
   while(true){
 
       switch (gameState) {
-        case BSGameStatePlaying:{
+        case BSGameStatePlayingSinglePlayer:{
           startNewGame();
           break;
         }
         case BSGameStateMenu:
         default:
-          showMenu();
+          this->gameState = showMenu();
       }
   }
 
@@ -50,7 +51,7 @@ void BSGame::run(){
 // ======================
 
 
-void BSGame::showMenu(){
+BSGameState BSGame::showMenu(){
 
   uint8_t cursorIdx = 0;
 
@@ -65,21 +66,24 @@ void BSGame::showMenu(){
       cursorIdx--;
     }
     if (arduboy.justPressed(B_BUTTON)){
-      arduboy.clear();
-      arduboy.display();
-      this->gameState = BSGameStatePlaying;
       arduboy.initRandomSeed();
-      return;
+
+      // Single player
+      if (cursorIdx == 0)
+        return BSGameStatePlayingSinglePlayer;
+
     }
-    cursorIdx = cursorIdx%2;
+    cursorIdx = cursorIdx%3;
 
     arduboy.clear();
 
-    tinyfont.setCursor(2, 2);
-    tinyfont.print(F("ONE PLAYER"));
-    tinyfont.setCursor(2, 8);
+    tinyfont.setCursor(2, 47);
+    tinyfont.print(F("SINGLE PLAYER"));
+    tinyfont.setCursor(2, 53);
+    tinyfont.print(F("TWO PLAYER"));
+    tinyfont.setCursor(2, 59);
     tinyfont.print(F("OPTIONS"));
-    tinyfont.setCursor(52, 2 + cursorIdx*6);
+    tinyfont.setCursor(75, 47 + cursorIdx*6);
     tinyfont.print("<");
 
     arduboy.display();
@@ -129,16 +133,16 @@ void BSGame::drawMapAtPosition(int16_t posX, int16_t posY, BSPlayer *aPlayer, bo
       mapTile = aPlayer->getMapTileAtPosition(j,i);
       mapTileType = MAP_TILE_TYPE(mapTile);
 
-      drawPosition.x = posX - j*16 + i*16;
-      drawPosition.y = posY + j*8 + i*8;
+      drawPosition.x = posX - j*16*gameMapZoom + i*16*gameMapZoom;
+      drawPosition.y = posY + j*8*gameMapZoom + i*8*gameMapZoom;
 
       // draw wireframe
-      ardbitmap.drawCompressed(drawPosition.x, drawPosition.y, BitmapWireframeTop, WHITE, ALIGN_H_LEFT, MIRROR_NONE);
+      ardbitmap.drawCompressedResized(drawPosition.x, drawPosition.y, BitmapWireframeTop, WHITE, ALIGN_H_LEFT, MIRROR_NONE, gameMapZoom);
 
       // Check for mountain
       if (mapTileType == MAP_TILE_TYPE_MOUNTAIN){
-        ardbitmap.drawCompressed(drawPosition.x, drawPosition.y, BitmapMountainMask, BLACK, ALIGN_H_LEFT, MIRROR_NONE);
-        ardbitmap.drawCompressed(drawPosition.x, drawPosition.y, BitmapMountain, WHITE, ALIGN_H_LEFT, MIRROR_NONE);
+        ardbitmap.drawCompressedResized(drawPosition.x, drawPosition.y, BitmapMountainMask, BLACK, ALIGN_H_LEFT, MIRROR_NONE, gameMapZoom);
+        ardbitmap.drawCompressedResized(drawPosition.x, drawPosition.y, BitmapMountain, WHITE, ALIGN_H_LEFT, MIRROR_NONE, gameMapZoom);
       }
 
       // Check for Ship
@@ -171,8 +175,8 @@ void BSGame::drawMapAtPosition(int16_t posX, int16_t posY, BSPlayer *aPlayer, bo
           shipMaskSprite = BitmapShipMiddleMask;
         }
 
-        ardbitmap.drawCompressed(drawPosition.x, drawPosition.y, shipMaskSprite, BLACK, ALIGN_H_LEFT, isVertical?MIRROR_NONE:MIRROR_HORIZONTAL);
-        ardbitmap.drawCompressed(drawPosition.x, drawPosition.y, shipSprite, WHITE, ALIGN_H_LEFT, isVertical?MIRROR_NONE:MIRROR_HORIZONTAL);
+        ardbitmap.drawCompressedResized(drawPosition.x, drawPosition.y, shipMaskSprite, BLACK, ALIGN_H_LEFT, isVertical?MIRROR_NONE:MIRROR_HORIZONTAL, gameMapZoom);
+        ardbitmap.drawCompressedResized(drawPosition.x, drawPosition.y, shipSprite, WHITE, ALIGN_H_LEFT, isVertical?MIRROR_NONE:MIRROR_HORIZONTAL, gameMapZoom);
 
       }
     }
@@ -190,8 +194,8 @@ void BSGame::drawShipAtPosition(int16_t posX, int16_t posY, uint8_t length, bool
   for (uint8_t i = 0; i < length; i++) {
 
     // add index offset to coords
-    x = posX + (i * (vertical?-1:1) * 16);
-    y = posY + (i * 8);
+    x = posX + (i * (vertical?-1:1) * 16 * gameMapZoom);
+    y = posY + (i * 8 * gameMapZoom);
 
 
     if (i == 0) {
@@ -211,8 +215,8 @@ void BSGame::drawShipAtPosition(int16_t posX, int16_t posY, uint8_t length, bool
     }
 
     // // Check if vertical
-    ardbitmap.drawCompressed(x, y, shipMaskSprite, BLACK, ALIGN_H_LEFT, vertical?MIRROR_NONE:MIRROR_HORIZONTAL);
-    ardbitmap.drawCompressed(x, y, shipSprite, WHITE, ALIGN_H_LEFT, vertical?MIRROR_NONE:MIRROR_HORIZONTAL);
+    ardbitmap.drawCompressedResized(x, y, shipMaskSprite, BLACK, ALIGN_H_LEFT, vertical?MIRROR_NONE:MIRROR_HORIZONTAL, gameMapZoom);
+    ardbitmap.drawCompressedResized(x, y, shipSprite, WHITE, ALIGN_H_LEFT, vertical?MIRROR_NONE:MIRROR_HORIZONTAL, gameMapZoom);
   }
 }
 

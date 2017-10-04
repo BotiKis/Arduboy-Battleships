@@ -12,7 +12,8 @@ const char* shipNameForLength(uint8_t length);
 
 typedef enum BSGameState{
   BSGameStateMenu = 0,
-  BSGameStatePlaying,
+  BSGameStatePlayingSinglePlayer,
+  BSGameStatePlayingMultiPlayer,
   BSGameStateEnding
 }BSGameState;
 
@@ -31,7 +32,7 @@ private:
     // Methods
 
     // Game methods
-    void showMenu();
+    BSGameState showMenu();
     void startNewGame();
     void resetGame();
     void showPlaceShips();
@@ -54,6 +55,7 @@ private:
     Point cursorPosition;
 
     // players
+    float gameMapZoom;
     BSPlayer player1;
     BSPlayer player2;
 };
