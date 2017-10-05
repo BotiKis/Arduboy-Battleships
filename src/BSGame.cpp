@@ -46,7 +46,7 @@ void BSGame::run(){
 
           // start game
           startNewSinglePlayerGame();
-          
+
           break;
         }
         case BSGameStateMenu:
@@ -103,6 +103,9 @@ void BSGame::resetGame(){
 
   player1.resetPlayer();
   player2.resetPlayer();
+
+  player1.setPlayerName("Player 1");
+  player2.setPlayerName("Player 2");
 
   // reset cursor
   cursorPosition = {0,0};
@@ -172,6 +175,10 @@ void BSGame::drawMapAtPosition(int16_t posX, int16_t posY, BSPlayer *aPlayer, bo
   }
 }
 
+void BSGame::animateFromPlayerToPlayer(BSPlayer *aPlayer, BSPlayer *aOpponent, bool animateUp){
+
+}
+
 /// Draws a ship with the given settings
 void BSGame::drawShipAtPosition(int16_t posX, int16_t posY, uint8_t length, bool vertical){
 
@@ -209,34 +216,55 @@ void BSGame::drawShipAtPosition(int16_t posX, int16_t posY, uint8_t length, bool
   }
 }
 
-void BSGame::printMapTileBinary(uint8_t posX, uint8_t posY, uint16_t val){
-  char buff[20] = {'\0'};
-  for (uint8_t i = 0; i < 16; i++) {
-    buff[i] = ((val >> (15-i))&0b1) ? '1':'0';
+void BSGame::showOKDialog(Rect frame, const char *dialogTitle){
+  // dialog should not be smaller than this
+  frame.width = max(frame.width, 32);
+  frame.height = max(frame.height, 18);
+
+  // calc OK button frame
+  Rect okButtonFrame;
+  okButtonFrame.width = 14;
+  okButtonFrame.height = 8;
+  okButtonFrame.x = frame.x + (frame.width/2) - 7;
+  okButtonFrame.y = frame.y + frame.height - 12;
+
+  Point okTextPos;
+  okTextPos.x = okButtonFrame.x + okButtonFrame.width/2 - 4;
+  okTextPos.y = okButtonFrame.y + 2;
+
+  Point dialogTitlePos;
+  dialogTitlePos.x = frame.x + frame.width/2 - (strlen(dialogTitle)*5/2);
+  dialogTitlePos.y = frame.y + 4;
+
+  uint8_t animator = 0;
+
+  // dialog loop
+  while (true) {
+    // Get input
+    arduboy.pollButtons();
+
+    if (arduboy.justPressed(A_BUTTON)){
+      return;
+    }
+
+    // wait for next frame with drawing
+    if (!arduboy.nextFrame()) continue;
+    if (arduboy.everyXFrames(5)) animator = (animator+1)%2;
+
+    // Drawing
+
+    // Infobox
+    arduboy.fillRect(frame.x, frame.y, frame.width, frame.height, BLACK);
+    arduboy.drawRect(frame.x + 1, frame.y + 1, frame.width-2, frame.height-2, WHITE);
+
+    // OK Button
+    arduboy.drawRect(okButtonFrame.x - 1*animator, okButtonFrame.y - 1*animator, okButtonFrame.width + 2*animator, okButtonFrame.height + 2*animator, WHITE);
+    tinyfont.setCursor(okTextPos.x , okTextPos.y);
+    tinyfont.print(F("OK"));
+
+    tinyfont.setCursor(dialogTitlePos.x , dialogTitlePos.y);
+    tinyfont.print(dialogTitle);
+
+    arduboy.display();
   }
-
-  tinyfont.setCursor(posX, posY);
-  tinyfont.print(buff);
 }
-
-
-        // char buff[32] = {'\0'};
-        // sprintf(buff, "sIdx:\t%d\nsL  :\t%d\ntIdx:\t%d", shipIdx, shipLength, tileIdx);
-        // static Point infoOrigin = {40, 0};
-        //
-        // while(1){
-        //   arduboy.pollButtons();
-        //
-        //   if (arduboy.justPressed(B_BUTTON)) break;
-        //   arduboy.clear();
-        //
-        //   // Infobox
-        //   arduboy.fillRect(infoOrigin.x, infoOrigin.y, WIDTH-infoOrigin.x, 24,WHITE);
-        //   arduboy.fillRect(infoOrigin.x+1, infoOrigin.y+1, WIDTH-infoOrigin.x-1, 22,BLACK);
-        //   tinyfont.setCursor(infoOrigin.x+3, infoOrigin.y+3);
-        //   tinyfont.print(buff);
-        //
-        //   printMapTileBinary(infoOrigin.x+3, infoOrigin.y+19, mapTile);
-        //
-        //   arduboy.display();
-        // }

@@ -15,6 +15,8 @@
 #define MAP_SHIP_INDEX_BIT_POS      4
 #define MAP_SHIPLENGTH_BIT_POS      7
 #define MAP_SHIPTILE_INDEX_BIT_POS  10
+#define MAP_SHIPTILE_DESTROYED_POS  13
+#define MAP_SHIPTILE_ISVERTICAL_POS 14
 
 #define MAP_FLAG_IS_DESTROYED    _BV(13)  // Set if the shippart is destroyed
 #define MAP_FLAG_IS_VERTICAL     _BV(14)  // Set if the shipTile (thus the full ship) is vertically aligned

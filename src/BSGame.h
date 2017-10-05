@@ -36,6 +36,7 @@ private:
     void startNewSinglePlayerGame();
     void resetGame();
     void showPlaceShipsForPlayer(BSPlayer *aPlayer);
+    void showTurnOfPlayer(BSPlayer *aPlayer, BSPlayer *aOpponent);
 
     // draws the map of a given player to the screen
     void drawMapAtPosition(int16_t posX, int16_t posY, BSPlayer *aPlayer, bool drawShips);
@@ -43,10 +44,14 @@ private:
     /// Draws a ship with the given settings
     void drawShipAtPosition(int16_t posX, int16_t posY, uint8_t length, bool vertical);
 
-    // DEBUG
-    void printMapTileBinary(uint8_t posX, uint8_t posY, uint16_t val);
+    // Animates players maps
+    void animateFromPlayerToPlayer(BSPlayer *aPlayer, BSPlayer *aOpponent, bool animateUp);
 
+    // fills player 2 with random data
     void createMapForAI();
+
+    // displays a simple dialog with the given text
+    void showOKDialog(Rect frame, const char *dialogTitle);
 
     // ======================
     // Data

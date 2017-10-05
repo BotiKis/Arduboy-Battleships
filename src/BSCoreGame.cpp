@@ -33,7 +33,7 @@ void BSGame::showPlaceShipsForPlayer(BSPlayer *aPlayer){
       if (arduboy.justPressed(B_BUTTON)){
         if (!aPlayer->detectShipCollisionOnMap(cursorPosition.x, cursorPosition.y, currentShipLength, placeVertical)) {
           // place ship
-          aPlayer->writeShipToMap(cursorPosition.x, cursorPosition.y, currentShipLength, shipCount-1, placeVertical);
+          aPlayer->addShip(cursorPosition.x, cursorPosition.y, currentShipLength, shipCount-1, placeVertical);
 
           shipCount--;
           break;
@@ -132,7 +132,7 @@ void BSGame::createMapForAI(){
     // place ship
     if (!player2.detectShipCollisionOnMap(shipPos.x, shipPos.y, currentShipLength, placeVertical)) {
       // place ship
-      player2.writeShipToMap(shipPos.x, shipPos.y, currentShipLength, shipCount-1, placeVertical);
+      player2.addShip(shipPos.x, shipPos.y, currentShipLength, shipCount-1, placeVertical);
 
       shipCount--;
     }
@@ -141,7 +141,43 @@ void BSGame::createMapForAI(){
 }
 
 void BSGame::startNewSinglePlayerGame(){
+  BSPlayer *attackingPlayer, *passivePlayer;
 
+  // randomize player
+  bool randPlayer = (random()%2) == 0;
+  attackingPlayer = randPlayer?&player1:&player2;
+  passivePlayer = randPlayer?&player2:&player1;
+
+  // frame for the dialog
+  static Rect dialogFrame;
+  dialogFrame.width = 80;
+  dialogFrame.height = 32;
+  dialogFrame.x = (WIDTH - dialogFrame.width)/2;
+  dialogFrame.y = (HEIGHT - dialogFrame.height)/2;
+
+  static char titleBuffer[32];
+
+  // game loop
+  while(true){
+    sprintf(titleBuffer, "%s turn!", attackingPlayer->getPlayerName());
+    showOKDialog(dialogFrame, titleBuffer);
+
+    showTurnOfPlayer(attackingPlayer, passivePlayer);
+
+    // check for end
+    if (passivePlayer->getRemainingShips() == 0) {
+
+    }
+
+    // switch players
+    BSPlayer *playerBuff = attackingPlayer;
+    attackingPlayer = passivePlayer;
+    passivePlayer = playerBuff;
+  }
+}
+
+
+void BSGame::showTurnOfPlayer(BSPlayer *aPlayer, BSPlayer *aOpponent){
   // point where the map will be drawn
   Point cameraPosition = {0,0};
   static const Point mapOrigin = {26, 0};
@@ -152,11 +188,14 @@ void BSGame::startNewSinglePlayerGame(){
   // Game loop
   while(true){
 
+    // wait for next frame with drawing
+    if (!arduboy.nextFrame()) continue;
+
     // Get input
     arduboy.pollButtons();
 
     if (arduboy.justPressed(B_BUTTON)){
-
+      return;
     }
     if (arduboy.justPressed(A_BUTTON)){
     }
@@ -179,9 +218,6 @@ void BSGame::startNewSinglePlayerGame(){
     cursorPosition.y = max(cursorPosition.y, 0);
     cursorPosition.y = min(cursorPosition.y, BS_MAP_SIZE-1);
 
-    // wait for next frame with drawing
-    if (!arduboy.nextFrame()) continue;
-
     // handle animators
     // cursor
     if (arduboy.everyXFrames(3)) animatorCursor = !animatorCursor;
@@ -193,19 +229,19 @@ void BSGame::startNewSinglePlayerGame(){
     // tile height is 32 and width 16, all sprites are 32x32 for simplicity and overdrawing
     cameraPosition.x = mapOrigin.x - (cursorPosition.x - cursorPosition.y)*16*gameMapZoom;
     cameraPosition.y = mapOrigin.y - (cursorPosition.x + cursorPosition.y)*8*gameMapZoom;
-    drawMapAtPosition(cameraPosition.x, cameraPosition.y, &player1, false);
+    drawMapAtPosition(cameraPosition.x, cameraPosition.y, aOpponent, false);
 
     // draw cursor
     if(animatorCursor) ardbitmap.drawCompressedResized(mapOrigin.x, mapOrigin.y, BitmapCursorFull, WHITE, ALIGN_H_LEFT, MIRROR_NONE, gameMapZoom);
-
 
     // Infobox
     arduboy.fillRect(73,0,55,19,WHITE);
     arduboy.fillRect(74,0,54,18,BLACK);
     tinyfont.setCursor(76,3);
-    tinyfont.print(F("Player 1\nturn"));
+    char sBuff[32] = {'\0'};
+    sprintf(sBuff, "%s\nturn", aPlayer->getPlayerName());
+    tinyfont.print(sBuff);
 
     arduboy.display();
   }
-
 }
