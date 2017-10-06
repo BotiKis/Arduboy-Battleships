@@ -223,10 +223,10 @@ void BSGame::showOKDialog(Rect frame, const char *dialogTitle){
 
   // calc OK button frame
   Rect okButtonFrame;
-  okButtonFrame.width = 14;
+  okButtonFrame.width = 16;
   okButtonFrame.height = 8;
   okButtonFrame.x = frame.x + (frame.width/2) - 7;
-  okButtonFrame.y = frame.y + frame.height - 12;
+  okButtonFrame.y = frame.y + frame.height - 13;
 
   Point okTextPos;
   okTextPos.x = okButtonFrame.x + okButtonFrame.width/2 - 4;
@@ -234,7 +234,7 @@ void BSGame::showOKDialog(Rect frame, const char *dialogTitle){
 
   Point dialogTitlePos;
   dialogTitlePos.x = frame.x + frame.width/2 - (strlen(dialogTitle)*5/2);
-  dialogTitlePos.y = frame.y + 4;
+  dialogTitlePos.y = frame.y + 6;
 
   uint8_t animator = 0;
 
@@ -251,14 +251,13 @@ void BSGame::showOKDialog(Rect frame, const char *dialogTitle){
     if (!arduboy.nextFrame()) continue;
     if (arduboy.everyXFrames(5)) animator = (animator+1)%2;
 
-    // Drawing
-
+    // Drawingx
     // Infobox
-    arduboy.fillRect(frame.x, frame.y, frame.width, frame.height, BLACK);
-    arduboy.drawRect(frame.x + 1, frame.y + 1, frame.width-2, frame.height-2, WHITE);
+    arduboy.fillRoundRect(frame.x, frame.y, frame.width, frame.height, 5, BLACK);
+    arduboy.drawRoundRect(frame.x + 1, frame.y + 1, frame.width-2, frame.height-2, 5, WHITE);
 
     // OK Button
-    arduboy.drawRect(okButtonFrame.x - 1*animator, okButtonFrame.y - 1*animator, okButtonFrame.width + 2*animator, okButtonFrame.height + 2*animator, WHITE);
+    arduboy.drawRoundRect(okButtonFrame.x - 1*animator, okButtonFrame.y - 1*animator, okButtonFrame.width + 2*animator, okButtonFrame.height + 2*animator, 2+animator, WHITE);
     tinyfont.setCursor(okTextPos.x , okTextPos.y);
     tinyfont.print(F("OK"));
 

@@ -150,7 +150,7 @@ void BSGame::startNewSinglePlayerGame(){
 
   // frame for the dialog
   static Rect dialogFrame;
-  dialogFrame.width = 80;
+  dialogFrame.width = 82;
   dialogFrame.height = 32;
   dialogFrame.x = (WIDTH - dialogFrame.width)/2;
   dialogFrame.y = (HEIGHT - dialogFrame.height)/2;
@@ -159,7 +159,7 @@ void BSGame::startNewSinglePlayerGame(){
 
   // game loop
   while(true){
-    sprintf(titleBuffer, "%s turn!", attackingPlayer->getPlayerName());
+    sprintf(titleBuffer, "%s TURN!", attackingPlayer->getPlayerName());
     showOKDialog(dialogFrame, titleBuffer);
 
     showTurnOfPlayer(attackingPlayer, passivePlayer);
