@@ -47,6 +47,39 @@ void BSGame::run(){
           // start game
           startNewSinglePlayerGame();
 
+          // end
+          this->gameState = BSGameStateMenu;
+
+          break;
+        }
+        case BSGameStatePlayingMultiPlayer:{
+          // reset Game
+          resetGame();
+
+          static char titleBuffer[32];
+
+          // place ships player 1
+          sprintf(titleBuffer, "%s place\nyour ships!", player1.getPlayerName());
+          showOKDialog(titleBuffer);
+          showPlaceShipsForPlayer(&player1);
+
+
+          // place ships player 2
+          sprintf(titleBuffer, "%s place\nyour ships!", player2.getPlayerName());
+          showOKDialog(titleBuffer);
+          showPlaceShipsForPlayer(&player2);
+
+          // start game
+          startNewMultiPlayerGame();
+
+          // end
+          this->gameState = BSGameStateMenu;
+
+          break;
+        }
+        case BSGameStateOptions:{
+          showOKDialog("Options here");
+          this->gameState = BSGameStateMenu;
           break;
         }
         case BSGameStateMenu:
@@ -80,6 +113,10 @@ BSGameState BSGame::showMenu(){
       // Single player
       if (cursorIdx == 0)
         return BSGameStatePlayingSinglePlayer;
+      if (cursorIdx == 1)
+        return BSGameStatePlayingMultiPlayer;
+      if (cursorIdx == 2)
+        return BSGameStateOptions;
 
     }
     cursorIdx = cursorIdx%3;
@@ -129,12 +166,12 @@ void BSGame::drawMapAtPosition(int16_t posX, int16_t posY, BSPlayer *aPlayer, bo
       drawPosition.y = posY + j*8*gameMapZoom + i*8*gameMapZoom;
 
       // draw wireframe
-      ardbitmap.drawCompressedResized(drawPosition.x, drawPosition.y, BitmapWireframeTop, WHITE, ALIGN_H_LEFT, MIRROR_NONE, gameMapZoom);
+      ardbitmap.drawCompressed(drawPosition.x, drawPosition.y, BitmapWireframeTop, WHITE, ALIGN_H_LEFT, MIRROR_NONE);
 
       // Check for mountain
       if (mapTileType == MAP_TILE_TYPE_MOUNTAIN){
-        ardbitmap.drawCompressedResized(drawPosition.x, drawPosition.y, BitmapMountainMask, BLACK, ALIGN_H_LEFT, MIRROR_NONE, gameMapZoom);
-        ardbitmap.drawCompressedResized(drawPosition.x, drawPosition.y, BitmapMountain, WHITE, ALIGN_H_LEFT, MIRROR_NONE, gameMapZoom);
+        ardbitmap.drawCompressed(drawPosition.x, drawPosition.y, BitmapMountainMask, BLACK, ALIGN_H_LEFT, MIRROR_NONE);
+        ardbitmap.drawCompressed(drawPosition.x, drawPosition.y, BitmapMountain, WHITE, ALIGN_H_LEFT, MIRROR_NONE);
       }
 
       // Check for Ship
@@ -167,8 +204,8 @@ void BSGame::drawMapAtPosition(int16_t posX, int16_t posY, BSPlayer *aPlayer, bo
           shipMaskSprite = BitmapShipMiddleMask;
         }
 
-        ardbitmap.drawCompressedResized(drawPosition.x, drawPosition.y, shipMaskSprite, BLACK, ALIGN_H_LEFT, isVertical?MIRROR_NONE:MIRROR_HORIZONTAL, gameMapZoom);
-        ardbitmap.drawCompressedResized(drawPosition.x, drawPosition.y, shipSprite, WHITE, ALIGN_H_LEFT, isVertical?MIRROR_NONE:MIRROR_HORIZONTAL, gameMapZoom);
+        ardbitmap.drawCompressed(drawPosition.x, drawPosition.y, shipMaskSprite, BLACK, ALIGN_H_LEFT, isVertical?MIRROR_NONE:MIRROR_HORIZONTAL);
+        ardbitmap.drawCompressed(drawPosition.x, drawPosition.y, shipSprite, WHITE, ALIGN_H_LEFT, isVertical?MIRROR_NONE:MIRROR_HORIZONTAL);
 
       }
     }
@@ -211,30 +248,41 @@ void BSGame::drawShipAtPosition(int16_t posX, int16_t posY, uint8_t length, bool
     }
 
     // // Check if vertical
-    ardbitmap.drawCompressedResized(x, y, shipMaskSprite, BLACK, ALIGN_H_LEFT, vertical?MIRROR_NONE:MIRROR_HORIZONTAL, gameMapZoom);
-    ardbitmap.drawCompressedResized(x, y, shipSprite, WHITE, ALIGN_H_LEFT, vertical?MIRROR_NONE:MIRROR_HORIZONTAL, gameMapZoom);
+    ardbitmap.drawCompressed(x, y, shipMaskSprite, BLACK, ALIGN_H_LEFT, vertical?MIRROR_NONE:MIRROR_HORIZONTAL);
+    ardbitmap.drawCompressed(x, y, shipSprite, WHITE, ALIGN_H_LEFT, vertical?MIRROR_NONE:MIRROR_HORIZONTAL);
   }
 }
 
-void BSGame::showOKDialog(Rect frame, const char *dialogTitle){
-  // dialog should not be smaller than this
-  frame.width = max(frame.width, 32);
-  frame.height = max(frame.height, 18);
+void BSGame::showOKDialog(const char *dialogTitle){
 
-  // calc OK button frame
+  // frame for the dialog
+  static Rect frame;
+
+  frame.width = 82;
+  frame.height = 32;
+  frame.x = 23;
+  frame.y = 16;
+
+  // OK button frame
   Rect okButtonFrame;
   okButtonFrame.width = 16;
   okButtonFrame.height = 8;
-  okButtonFrame.x = frame.x + (frame.width/2) - 7;
-  okButtonFrame.y = frame.y + frame.height - 13;
+  okButtonFrame.x = 56;
+  okButtonFrame.y = 35;
 
   Point okTextPos;
-  okTextPos.x = okButtonFrame.x + okButtonFrame.width/2 - 4;
-  okTextPos.y = okButtonFrame.y + 2;
+  okTextPos.x = 60;
+  okTextPos.y = 37;
 
   Point dialogTitlePos;
-  dialogTitlePos.x = frame.x + frame.width/2 - (strlen(dialogTitle)*5/2);
-  dialogTitlePos.y = frame.y + 6;
+  // check for linebreak
+  char *lb = strchr(dialogTitle,'\n');
+  if (lb != NULL)
+    dialogTitlePos.x = frame.x + frame.width/2 - ((lb-dialogTitle)*5/2);
+  // No line break
+  else
+    dialogTitlePos.x = frame.x + frame.width/2 - (strlen(dialogTitle)*5/2);
+  dialogTitlePos.y = 22;
 
   uint8_t animator = 0;
 
@@ -243,7 +291,8 @@ void BSGame::showOKDialog(Rect frame, const char *dialogTitle){
     // Get input
     arduboy.pollButtons();
 
-    if (arduboy.justPressed(A_BUTTON)){
+    // Exit on button press
+    if (arduboy.justPressed(B_BUTTON)){
       return;
     }
 
@@ -251,7 +300,7 @@ void BSGame::showOKDialog(Rect frame, const char *dialogTitle){
     if (!arduboy.nextFrame()) continue;
     if (arduboy.everyXFrames(5)) animator = (animator+1)%2;
 
-    // Drawingx
+    // Drawing
     // Infobox
     arduboy.fillRoundRect(frame.x, frame.y, frame.width, frame.height, 5, BLACK);
     arduboy.drawRoundRect(frame.x + 1, frame.y + 1, frame.width-2, frame.height-2, 5, WHITE);

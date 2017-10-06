@@ -14,7 +14,7 @@ typedef enum BSGameState{
   BSGameStateMenu = 0,
   BSGameStatePlayingSinglePlayer,
   BSGameStatePlayingMultiPlayer,
-  BSGameStateEnding
+  BSGameStateOptions
 }BSGameState;
 
 class BSGame{
@@ -34,6 +34,7 @@ private:
     // Game methods
     BSGameState showMenu();
     void startNewSinglePlayerGame();
+    void startNewMultiPlayerGame();
     void resetGame();
     void showPlaceShipsForPlayer(BSPlayer *aPlayer);
     void showTurnOfPlayer(BSPlayer *aPlayer, BSPlayer *aOpponent);
@@ -51,7 +52,7 @@ private:
     void createMapForAI();
 
     // displays a simple dialog with the given text
-    void showOKDialog(Rect frame, const char *dialogTitle);
+    void showOKDialog(const char *dialogTitle);
 
     // ======================
     // Data
