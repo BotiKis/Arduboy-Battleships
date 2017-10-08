@@ -80,12 +80,12 @@ void BSGame::showPlaceShipsForPlayer(BSPlayer *aPlayer){
 
       // Map
       // tile height is 32 and width 16, all sprites are 32x32 for simplicity and overdrawing
-      cameraPosition.x = mapOrigin.x - (cursorPosition.x - cursorPosition.y)*16*gameMapZoom;
-      cameraPosition.y = mapOrigin.y - (cursorPosition.x + cursorPosition.y)*8*gameMapZoom;
+      cameraPosition.x = mapOrigin.x - (cursorPosition.x - cursorPosition.y)*16;
+      cameraPosition.y = mapOrigin.y - (cursorPosition.x + cursorPosition.y)*8;
       drawMapAtPosition(cameraPosition.x, cameraPosition.y, aPlayer, true);
 
       // draw cursor
-      if(animatorCursor) ardbitmap.drawCompressedResized(mapOrigin.x, mapOrigin.y, BitmapCursorFull, WHITE, ALIGN_H_LEFT, MIRROR_NONE, gameMapZoom);
+      if(animatorCursor) arduboy.drawBitmap(mapOrigin.x, mapOrigin.y+16, BitmapCursorDotted32x16, 32, 16, WHITE);
 
       drawShipAtPosition(mapOrigin.x, mapOrigin.y, currentShipLength, placeVertical);
 
@@ -287,12 +287,11 @@ void BSGame::showTurnOfPlayer(BSPlayer *aPlayer, BSPlayer *aOpponent){
 
     // Map
     // tile height is 32 and width 16, all sprites are 32x32 for simplicity and overdrawing
-    cameraPosition.x = mapOrigin.x - (cursorPosition.x - cursorPosition.y)*16*gameMapZoom;
-    cameraPosition.y = mapOrigin.y - (cursorPosition.x + cursorPosition.y)*8*gameMapZoom;
+    cameraPosition.x = mapOrigin.x - (cursorPosition.x - cursorPosition.y)*16;
+    cameraPosition.y = mapOrigin.y - (cursorPosition.x + cursorPosition.y)*8;
     drawMapAtPosition(cameraPosition.x, cameraPosition.y, aOpponent, false);
 
-    // draw cursor
-    if(animatorCursor) ardbitmap.drawCompressedResized(mapOrigin.x, mapOrigin.y, BitmapCursorFull, WHITE, ALIGN_H_LEFT, MIRROR_NONE, gameMapZoom);
+    if(animatorCursor) arduboy.drawBitmap(mapOrigin.x, mapOrigin.y+16, BitmapCursorDotted32x16, 32, 16, WHITE);
 
     // Infobox
     arduboy.fillRect(73,0,55,19,WHITE);

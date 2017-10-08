@@ -62,11 +62,10 @@ private:
     BSGameState gameState;
     Point cursorPosition;
 
-      // Shipdata for players
-      uint8_t const playerShipList[BS_SHIPS_PER_PLAYER] = {2,3,4,5,0,0,0,0};
+    // Shipdata for players
+    uint8_t const playerShipList[BS_SHIPS_PER_PLAYER] = {2,3,4,5,0,0,0,0};
 
     // players
-    float gameMapZoom;
     BSPlayer player1;
     BSPlayer player2;
 };
