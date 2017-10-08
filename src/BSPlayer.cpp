@@ -76,12 +76,11 @@ bool BSPlayer::shipTileAtPosition(uint8_t posX, uint8_t posY){
 void BSPlayer::destroyTileAtPosition(uint8_t posX, uint8_t posY){
   // check if it's a shiptile which can be destroyed
   if (shipTileAtPosition(posX, posY)) {
-      uint16_t tileData = playerMap[posY][posX];
       // mark shiptile as destroyed
-      tileData |= MAP_FLAG_IS_DESTROYED;
+      playerMap[posY][posX] |= MAP_FLAG_IS_DESTROYED;
 
       // check if ship have remaining tiles
-      uint8_t shipIndex = MAP_SHIP_INDEX(tileData);
+      uint8_t shipIndex = MAP_SHIP_INDEX(playerMap[posY][posX]);
       uint16_t currentTile = 0;
 
       for (uint8_t i = 0; i < BS_MAP_SIZE; i++) {

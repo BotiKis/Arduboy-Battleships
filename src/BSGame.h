@@ -7,6 +7,7 @@
 
 // helper to calc deltatime
 #define MILLIS_SINCE(MILLIS) (millis() - MILLIS)
+#define CURSOR_ANIMATION_TIME 3 // it's in frames not millis!
 
 const char* shipNameForLength(uint8_t length);
 
@@ -14,6 +15,8 @@ typedef enum BSGameState{
   BSGameStateMenu = 0,
   BSGameStatePlayingSinglePlayer,
   BSGameStatePlayingMultiPlayer,
+  BSGameStatePlayingNextTurn,
+  BSGameStatePlayingCancelAction,
   BSGameStateOptions
 }BSGameState;
 
@@ -39,11 +42,18 @@ private:
     void showPlaceShipsForPlayer(BSPlayer *aPlayer);
     void showTurnOfPlayer(BSPlayer *aPlayer, BSPlayer *aOpponent);
 
+    /// Draws the full explosion animation on screen
+    BSGameState showAimMenuOnPlayersMap(Point mapOrigin, Point cursorPos, BSPlayer *aPlayer);
+
+    // Draws the full explosion animation on screen
+    void drawExplosionAnimation(Point mapOrigin, Point cursorPos, BSPlayer *aPlayer);
+
     // draws the map of a given player to the screen
     void drawMapAtPosition(int16_t posX, int16_t posY, BSPlayer *aPlayer, bool drawShips);
 
     /// Draws a ship with the given settings
     void drawShipAtPosition(int16_t posX, int16_t posY, uint8_t length, bool vertical);
+
 
     // Animates players maps
     void animateFromPlayerToPlayer(BSPlayer *aPlayer, BSPlayer *aOpponent, bool animateUp);
@@ -63,7 +73,7 @@ private:
     Point cursorPosition;
 
     // Shipdata for players
-    uint8_t const playerShipList[BS_SHIPS_PER_PLAYER] = {2,3,4,5,0,0,0,0};
+    uint8_t const playerShipList[BS_SHIPS_PER_PLAYER] = {2,0,0,0,0,0,0,0};
 
     // players
     BSPlayer player1;

@@ -73,7 +73,7 @@ void BSGame::showPlaceShipsForPlayer(BSPlayer *aPlayer){
 
       // handle animators
       // cursor
-      if (arduboy.everyXFrames(3)) animatorCursor = !animatorCursor;
+      if (arduboy.everyXFrames(CURSOR_ANIMATION_TIME)) animatorCursor = !animatorCursor;
 
       // Drawing
       arduboy.clear();
@@ -161,7 +161,7 @@ void BSGame::startNewMultiPlayerGame(){
     showTurnOfPlayer(attackingPlayer, passivePlayer);
 
     // check for end
-    if (passivePlayer->getRemainingShips() == 0) {
+    if (passivePlayer->getRemainingShips() <= 0) {
       sprintf(titleBuffer, "%s WON!\n YEAAAH", attackingPlayer->getPlayerName());
       showOKDialog(titleBuffer);
       return;
@@ -192,72 +192,9 @@ void BSGame::showTurnOfPlayer(BSPlayer *aPlayer, BSPlayer *aOpponent){
     // Get input
     arduboy.pollButtons();
 
+    // show dialog to fire
     if (arduboy.justPressed(B_BUTTON)){
-      //handle submenu
-      uint8_t cursorIdx = 0;
-
-      // calc pos
-      Point subMenuPosition;
-      subMenuPosition.x = mapOrigin.x+32;
-      subMenuPosition.y = mapOrigin.y+17;
-
-      // menu loop
-      while(true){
-
-        // wait for next frame with drawing
-        if (!arduboy.nextFrame()) continue;
-
-        // Get input
-        arduboy.pollButtons();
-
-        if (arduboy.justPressed(DOWN_BUTTON)){
-          cursorIdx++;
-        }
-        if (arduboy.justPressed(UP_BUTTON)){
-          cursorIdx--;
-        }
-        cursorIdx = cursorIdx%2;
-
-        if (arduboy.justPressed(B_BUTTON)){
-
-          // Handle Fire
-          if (cursorIdx == 0){
-            // check for shipSprite
-            if (aOpponent->shipTileAtPosition(cursorPosition.x, cursorPosition.y)) {
-              aOpponent->destroyTileAtPosition(cursorPosition.x, cursorPosition.y);
-              showOKDialog("HIT!");
-            }
-            else{
-              showOKDialog("HAHA MISS!");
-            }
-            return;
-          }
-          // cancel sub menu
-          if (cursorIdx == 1)
-            break;
-        }
-        // cancel on A
-        if (arduboy.justPressed(A_BUTTON))
-          break;
-
-        // show context menu
-        arduboy.fillRect(subMenuPosition.x, subMenuPosition.y, 38, 15, BLACK);
-        arduboy.drawRect(subMenuPosition.x+1, subMenuPosition.y+1, 36, 13, WHITE);
-
-        // draw text
-        tinyfont.setCursor(subMenuPosition.x+3, subMenuPosition.y+3);
-        tinyfont.print(F("FIRE!"));
-        tinyfont.setCursor(subMenuPosition.x+3, subMenuPosition.y+8);
-        tinyfont.print(F("cancel"));
-
-        // draw cursor
-        tinyfont.setCursor(subMenuPosition.x+32, subMenuPosition.y + 3 + 5*cursorIdx);
-        tinyfont.print("<");
-
-        arduboy.display();
-      }
-    }
-    if (arduboy.justPressed(A_BUTTON)){
+      if(showAimMenuOnPlayersMap(mapOrigin, cursorPosition, aOpponent) == BSGameStatePlayingNextTurn) return;
     }
 
     // Move cursor
@@ -280,13 +217,13 @@ void BSGame::showTurnOfPlayer(BSPlayer *aPlayer, BSPlayer *aOpponent){
 
     // handle animators
     // cursor
-    if (arduboy.everyXFrames(3)) animatorCursor = !animatorCursor;
+    if (arduboy.everyXFrames(CURSOR_ANIMATION_TIME)) animatorCursor = !animatorCursor;
 
     // Drawing
     arduboy.clear();
 
     // Map
-    // tile height is 32 and width 16, all sprites are 32x32 for simplicity and overdrawing
+    // tile height is 32 and width 16
     cameraPosition.x = mapOrigin.x - (cursorPosition.x - cursorPosition.y)*16;
     cameraPosition.y = mapOrigin.y - (cursorPosition.x + cursorPosition.y)*8;
     drawMapAtPosition(cameraPosition.x, cameraPosition.y, aOpponent, false);
@@ -303,6 +240,98 @@ void BSGame::showTurnOfPlayer(BSPlayer *aPlayer, BSPlayer *aOpponent){
 
     tinyfont.setCursor(76,10);
     tinyfont.print(F("AIM!"));
+
+    arduboy.display();
+  }
+}
+
+
+BSGameState BSGame::showAimMenuOnPlayersMap(Point mapOrigin, Point cursorPos, BSPlayer *aPlayer){
+  //handle submenu
+  uint8_t menuCursorIdx = 0;
+
+  // calc pos
+  Point subMenuPosition;
+  subMenuPosition.x = mapOrigin.x+32;
+  subMenuPosition.y = mapOrigin.y+17;
+
+  Point cameraPosition;
+  cameraPosition.x = mapOrigin.x - (cursorPos.x - cursorPos.y)*16;
+  cameraPosition.y = mapOrigin.y - (cursorPos.x + cursorPos.y)*8;
+
+  // animators
+  bool animatorCursor = false;
+
+  // menu loop
+  while(true){
+
+    // wait for next frame with drawing
+    if (!arduboy.nextFrame()) continue;
+
+    // handle animators
+    // cursor
+    if (arduboy.everyXFrames(CURSOR_ANIMATION_TIME)) animatorCursor = !animatorCursor;
+
+    // Get input
+    arduboy.pollButtons();
+
+    if (arduboy.justPressed(DOWN_BUTTON)){
+      menuCursorIdx++;
+    }
+    if (arduboy.justPressed(UP_BUTTON)){
+      menuCursorIdx--;
+    }
+    menuCursorIdx = menuCursorIdx%2;
+
+    if (arduboy.justPressed(B_BUTTON)){
+
+      // Handle Fire
+      if (menuCursorIdx == 0){
+        // check for shipSprite
+        if (aPlayer->shipTileAtPosition(cursorPosition.x, cursorPosition.y)) {
+          drawExplosionAnimation(mapOrigin, cursorPosition, aPlayer);
+          aPlayer->destroyTileAtPosition(cursorPosition.x, cursorPosition.y);
+          // draw map
+          arduboy.clear();
+          drawMapAtPosition(cameraPosition.x, cameraPosition.y, aPlayer, false);
+          arduboy.display();
+          delay(1000);
+          showOKDialog("HIT!");
+        }
+        else{
+          showOKDialog("HAHA MISS!");
+        }
+        return BSGameStatePlayingNextTurn;
+      }
+      // cancel sub menu
+      if (menuCursorIdx == 1)
+        return BSGameStatePlayingCancelAction;
+    }
+    // cancel on A
+    if (arduboy.justPressed(A_BUTTON))
+      return BSGameStatePlayingCancelAction;
+
+    arduboy.clear();
+
+    // draw map
+    drawMapAtPosition(cameraPosition.x, cameraPosition.y, aPlayer, false);
+
+    // draw cursor
+    if(animatorCursor) arduboy.drawBitmap(mapOrigin.x, mapOrigin.y+16, BitmapCursorDotted32x16, 32, 16, WHITE);
+
+    // show context menu
+    arduboy.fillRect(subMenuPosition.x, subMenuPosition.y, 38, 15, BLACK);
+    arduboy.drawRect(subMenuPosition.x+1, subMenuPosition.y+1, 36, 13, WHITE);
+
+    // draw text
+    tinyfont.setCursor(subMenuPosition.x+3, subMenuPosition.y+3);
+    tinyfont.print(F("FIRE!"));
+    tinyfont.setCursor(subMenuPosition.x+3, subMenuPosition.y+8);
+    tinyfont.print(F("cancel"));
+
+    // draw cursor
+    tinyfont.setCursor(subMenuPosition.x+32, subMenuPosition.y + 3 + 5*menuCursorIdx);
+    tinyfont.print("<");
 
     arduboy.display();
   }

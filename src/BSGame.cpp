@@ -1,6 +1,7 @@
 #include "BSGame.h"
 #include "BSIsometricBitmaps.h"
 #include "BSMapTileData.h"
+#include "BSAnimationHelper.h"
 
 // Shipnames
 const char* shipNameForLength(uint8_t length){
@@ -179,6 +180,12 @@ void BSGame::drawMapAtPosition(int16_t posX, int16_t posY, BSPlayer *aPlayer, bo
       // Check for Ship
       else if (mapTileType == MAP_TILE_TYPE_SHIP){
 
+        // check if it's destroyed
+        if ((mapTile & MAP_FLAG_IS_DESTROYED) != 0) {
+          ardbitmap.drawCompressed(drawPosition.x, drawPosition.y, BitmapShipDebries132x32, WHITE, ALIGN_H_LEFT, MIRROR_NONE);
+          continue;
+        }
+
         // don't draw
         if (!drawShips) continue;
 
@@ -190,7 +197,6 @@ void BSGame::drawMapAtPosition(int16_t posX, int16_t posY, BSPlayer *aPlayer, bo
 
         unsigned const char *shipSprite = NULL;
         unsigned const char *shipMaskSprite = NULL;
-
         if (tileIdx == 0) {
           // Ship rear
           shipSprite = BitmapShipEnd16x32;
@@ -214,6 +220,73 @@ void BSGame::drawMapAtPosition(int16_t posX, int16_t posY, BSPlayer *aPlayer, bo
 
       }
     }
+  }
+}
+
+void BSGame::drawExplosionAnimation(Point mapOrigin, Point cursorPos, BSPlayer *aPlayer){
+
+  // Calc draw position
+  Point cameraPosition;
+  cameraPosition.x = mapOrigin.x - (cursorPos.x - cursorPos.y)*16;
+  cameraPosition.y = mapOrigin.y - (cursorPos.x + cursorPos.y)*8;
+
+  Point rocketStartPosition = {mapOrigin.x+24, -20};
+  Point rocketEndPosition = {mapOrigin.x+15, mapOrigin.y+8};
+
+  Point explosionPosition = {mapOrigin.x, mapOrigin.y-18};
+
+  // set up animation
+  uint64_t deltaTime = 0;
+  const uint16_t rocketFlyTime = 300;
+  const uint16_t explosionPhase1 = 200;
+  const uint16_t explosionPhase2 = 200;
+  const uint16_t explosionPhase3 = 300;
+  const uint16_t explosionPhase4 = 400;
+  const uint16_t animationDurationInMillis = rocketFlyTime + explosionPhase1 + explosionPhase2 + explosionPhase3 + explosionPhase4;
+  uint64_t animationStart = millis();
+
+  while(true){
+    // wait for next frame with drawing
+    if (!arduboy.nextFrame()) continue;
+
+    // get deltatime
+    deltaTime = MILLIS_SINCE(animationStart);
+
+    // exit if animation has ended
+    if (deltaTime > animationDurationInMillis) return;
+
+    arduboy.clear();
+    drawMapAtPosition(cameraPosition.x, cameraPosition.y, aPlayer, false);
+
+    // calc rocket
+    // only visible during the anim time
+    if (deltaTime <= rocketFlyTime) {
+      Point currentPos = animatePointFromToPoint(rocketStartPosition, rocketEndPosition, deltaTime*100/rocketFlyTime);
+      arduboy.drawBitmap(currentPos.x, currentPos.y, BitmapBombMask7x16, 7, 16, BLACK);
+      arduboy.drawBitmap(currentPos.x, currentPos.y, BitmapBomb7x16, 7, 16, WHITE);
+    }
+
+    // draw explosions
+    if (deltaTime > rocketFlyTime && deltaTime <= (rocketFlyTime+explosionPhase1) ) {
+      ardbitmap.drawCompressed(explosionPosition.x, explosionPosition.y, BitmapExplosion1Mask32x48, BLACK, ALIGN_H_LEFT, MIRROR_NONE);
+      ardbitmap.drawCompressed(explosionPosition.x, explosionPosition.y, BitmapExplosion132x48, WHITE, ALIGN_H_LEFT, MIRROR_NONE);
+    }
+    else if (deltaTime > (rocketFlyTime+explosionPhase1) && deltaTime <= (rocketFlyTime+explosionPhase1+explosionPhase2) ) {
+      ardbitmap.drawCompressed(explosionPosition.x, explosionPosition.y, BitmapExplosion2Mask32x48, BLACK, ALIGN_H_LEFT, MIRROR_NONE);
+      ardbitmap.drawCompressed(explosionPosition.x, explosionPosition.y, BitmapExplosion232x48, WHITE, ALIGN_H_LEFT, MIRROR_NONE);
+    }
+    else if (deltaTime > (rocketFlyTime+explosionPhase1+explosionPhase2) && deltaTime <= (rocketFlyTime+explosionPhase1+explosionPhase2+explosionPhase3) ) {
+      ardbitmap.drawCompressed(explosionPosition.x, explosionPosition.y, BitmapExplosion3Mask32x48, BLACK, ALIGN_H_LEFT, MIRROR_NONE);
+      ardbitmap.drawCompressed(explosionPosition.x, explosionPosition.y, BitmapExplosion332x48, WHITE, ALIGN_H_LEFT, MIRROR_NONE);
+    }
+    else if (deltaTime > (rocketFlyTime+explosionPhase1+explosionPhase2+explosionPhase3) && deltaTime <= (rocketFlyTime+explosionPhase1+explosionPhase2+explosionPhase3+explosionPhase4) ) {
+      ardbitmap.drawCompressed(explosionPosition.x, explosionPosition.y, BitmapExplosion4Mask32x48, BLACK, ALIGN_H_LEFT, MIRROR_NONE);
+      ardbitmap.drawCompressed(explosionPosition.x, explosionPosition.y, BitmapExplosion432x48, WHITE, ALIGN_H_LEFT, MIRROR_NONE);
+    }
+
+
+
+    arduboy.display();
   }
 }
 
