@@ -9,6 +9,10 @@
 #define MILLIS_SINCE(MILLIS) (millis() - MILLIS)
 #define CURSOR_ANIMATION_TIME 3 // it's in frames not millis!
 
+static inline bool pointIsEqualToPoint(Point a, Point b){
+  return (a.x == b.x && a.y == b.y);
+}
+
 const char* shipNameForLength(uint8_t length);
 
 typedef enum BSGameState{
