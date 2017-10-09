@@ -407,7 +407,7 @@ BSGameState BSGame::showAimMenuOnPlayersMap(Point mapOrigin, Point cursorPos, BS
         char dialogText[16] = {'\0'};
 
         // check for shipSprite
-        if (aPlayer->shipTileAtPosition(cursorPosition.x, cursorPosition.y)) {
+        if (aPlayer->isShipTileAtPosition(cursorPosition.x, cursorPosition.y)) {
           aPlayer->destroyTileAtPosition(cursorPosition.x, cursorPosition.y);
           strcpy(dialogText, "HIT!");
         }

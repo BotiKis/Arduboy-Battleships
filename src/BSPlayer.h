@@ -17,7 +17,7 @@ public:
   void addShip(uint8_t posX, uint8_t posY, uint8_t length, uint8_t shipIndex, bool vertical);
 
   // returns true if that tile contains a ship
-  bool shipTileAtPosition(uint8_t posX, uint8_t posY);
+  bool isShipTileAtPosition(uint8_t posX, uint8_t posY);
 
   // destroys tile at position if its a shiptile and decrements the
   // shipcount when all shiptiles of the ships are destroyed

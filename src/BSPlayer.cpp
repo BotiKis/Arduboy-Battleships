@@ -65,17 +65,16 @@ void BSPlayer::addShip(uint8_t posX, uint8_t posY, uint8_t length, uint8_t shipI
   remainingShips++;
 }
 
-bool BSPlayer::shipTileAtPosition(uint8_t posX, uint8_t posY){
+bool BSPlayer::isShipTileAtPosition(uint8_t posX, uint8_t posY){
 
   uint16_t tileData = playerMap[posY][posX];
 
-  if (MAP_TILE_TYPE(tileData) == MAP_TILE_TYPE_SHIP) return true;
-  return false;
+  return MAP_TILE_TYPE(tileData) == MAP_TILE_TYPE_SHIP;
 }
 
 void BSPlayer::destroyTileAtPosition(uint8_t posX, uint8_t posY){
   // check if it's a shiptile which can be destroyed
-  if (shipTileAtPosition(posX, posY)) {
+  if (isShipTileAtPosition(posX, posY)) {
       // mark shiptile as destroyed
       playerMap[posY][posX] |= MAP_FLAG_IS_DESTROYED;
 
@@ -85,9 +84,9 @@ void BSPlayer::destroyTileAtPosition(uint8_t posX, uint8_t posY){
 
       for (uint8_t i = 0; i < BS_MAP_SIZE; i++) {
         for (uint8_t j = 0; j < BS_MAP_SIZE; j++) {
-          if (shipTileAtPosition(j,i)) {
+          if (isShipTileAtPosition(j,i)) {
             currentTile = playerMap[i][j];
-            if (MAP_SHIP_INDEX(currentTile) == shipIndex) {
+            if (MAP_SHIP_INDEX(currentTile) == shipIndex && !(currentTile & MAP_FLAG_IS_DESTROYED)) {
               return;
             }
           }
