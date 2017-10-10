@@ -156,6 +156,9 @@ void BSGame::drawMapAtPosition(int16_t posX, int16_t posY, BSPlayer *aPlayer, bo
   uint16_t mapTileType = 0;
   Point drawPosition = {0,0};
 
+  uint64_t currentTime = millis();
+  uint8_t shipDebriesAnimationFrame = 0;
+
   // draw map
   for (uint8_t i = 0; i < BS_MAP_SIZE; i++) {
     for (uint8_t j = 0; j < BS_MAP_SIZE; j++) {
@@ -177,12 +180,49 @@ void BSGame::drawMapAtPosition(int16_t posX, int16_t posY, BSPlayer *aPlayer, bo
         arduboy.drawBitmap(drawPosition.x, drawPosition.y, BitmapMountain32x32, 32, 32, WHITE);
       }
 
+      // Check for water
+      else if (mapTileType == MAP_TILE_TYPE_WATER){
+
+        uint8_t animationStep = ((currentTime/600)+i+j)%4;
+
+        switch (animationStep) {
+          case 0: {
+            ardbitmap.drawCompressed(drawPosition.x, drawPosition.y+16, BitmapWater132x16, WHITE, ALIGN_H_LEFT, MIRROR_NONE);
+            break;
+          }
+          case 1: {
+            ardbitmap.drawCompressed(drawPosition.x, drawPosition.y+16, BitmapWater232x16, WHITE, ALIGN_H_LEFT, MIRROR_NONE);
+            break;
+          }
+          case 2: {
+            ardbitmap.drawCompressed(drawPosition.x, drawPosition.y+16, BitmapWater332x16, WHITE, ALIGN_H_LEFT, MIRROR_NONE);
+            break;
+          }
+          case 3:
+          default: {
+            // reset maptile
+            aPlayer->setMapTileAtPosition(j, i, 0x00);
+            break;
+          }
+        }
+
+      }
+
+      // check if empty and maybe make water
+      else if (mapTileType == MAP_TILE_TYPE_EMPTY){
+          uint8_t waterProbability = random(100);
+          if (waterProbability < 1) {
+            aPlayer->setMapTileAtPosition(j, i, MAP_TILE_TYPE_WATER);
+          }
+      }
+
       // Check for Ship
       else if (mapTileType == MAP_TILE_TYPE_SHIP){
 
         // check if it's destroyed
         if ((mapTile & MAP_FLAG_IS_DESTROYED) != 0) {
-          ardbitmap.drawCompressed(drawPosition.x, drawPosition.y, BitmapShipDebries132x32, WHITE, ALIGN_H_LEFT, MIRROR_NONE);
+          shipDebriesAnimationFrame = ((currentTime/1000)+i+j)%2;
+          ardbitmap.drawCompressed(drawPosition.x, drawPosition.y, (shipDebriesAnimationFrame == 0)?BitmapShipDebries132x32:BitmapShipDebries232x32, WHITE, ALIGN_H_LEFT, MIRROR_NONE);
           continue;
         }
 
@@ -288,10 +328,6 @@ void BSGame::drawExplosionAnimation(Point mapOrigin, Point cursorPos, BSPlayer *
 
     arduboy.display();
   }
-}
-
-void BSGame::animateFromPlayerToPlayer(BSPlayer *aPlayer, BSPlayer *aOpponent, bool animateUp){
-
 }
 
 /// Draws a ship with the given settings

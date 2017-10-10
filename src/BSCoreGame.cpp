@@ -12,7 +12,6 @@ void BSGame::showPlaceShipsForPlayer(BSPlayer *aPlayer){
 
   // point where the map will be drawn
   Point cameraPosition = {0,0};
-  static const Point mapOrigin = {26, 0};
   Point newCursorPos = {0, 0};
 
   // verticality
@@ -225,6 +224,8 @@ void BSGame::startNewMultiPlayerGame(){
       return;
     }
 
+    animateFromPlayerToPlayer(attackingPlayer, passivePlayer, false);
+
     // switch players
     BSPlayer *playerBuff = attackingPlayer;
     attackingPlayer = passivePlayer;
@@ -237,7 +238,6 @@ void BSGame::showTurnOfPlayer(BSPlayer *aPlayer, BSPlayer *aOpponent){
   // point where the map will be drawn
   cursorPosition = {0,0};
   Point cameraPosition = {0,0};
-  static const Point mapOrigin = {26, 0};
   Point newCursorPos;
 
   // animatiors
@@ -455,5 +455,45 @@ BSGameState BSGame::showAimMenuOnPlayersMap(Point mapOrigin, Point cursorPos, BS
     tinyfont.print("<");
 
     arduboy.display();
+  }
+}
+
+
+void BSGame::animateFromPlayerToPlayer(BSPlayer *aPlayer, BSPlayer *aOpponent, bool animateUp){
+
+  Point startPosition;
+  startPosition.x = mapOrigin.x;
+  startPosition.y = mapOrigin.y;
+
+  Point endPosition;
+  endPosition.x = mapOrigin.x + BS_MAP_SIZE*16 * animateUp?1:-1;
+  endPosition.y = mapOrigin.y + BS_MAP_SIZE*8 * animateUp?-1:1;
+
+  Point currentPos;
+
+  // set up animation
+  uint64_t deltaTime = 0;
+  const uint16_t animationDuration = 500;
+  uint64_t animationStart = millis();
+
+  while (true) {
+
+      // wait for next frame with drawing
+      if (!arduboy.nextFrame()) continue;
+
+      // get deltatime
+      deltaTime = MILLIS_SINCE(animationStart);
+
+      // exit if animation has ended
+      if (deltaTime > animationDuration) return;
+
+      // get new position
+      currentPos = animatePointFromToPoint(startPosition, endPosition, deltaTime*100/animationDuration);
+
+      arduboy.clear();
+
+      drawMapAtPosition(currentPos.x, currentPos.y, aPlayer, false);
+
+      arduboy.display();
   }
 }

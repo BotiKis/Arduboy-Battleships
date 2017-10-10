@@ -7,7 +7,7 @@
 
 // helper to calc deltatime
 #define MILLIS_SINCE(MILLIS) (millis() - MILLIS)
-#define CURSOR_ANIMATION_TIME 3 // it's in frames not millis!
+#define CURSOR_ANIMATION_TIME 15 // it's in frames not millis!
 
 static inline bool pointIsEqualToPoint(Point a, Point b){
   return (a.x == b.x && a.y == b.y);
@@ -82,5 +82,8 @@ private:
     // players
     BSPlayer player1;
     BSPlayer player2;
+
+    // default position of the map
+    const Point mapOrigin = {26, 0};
 };
 #endif
