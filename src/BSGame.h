@@ -41,7 +41,9 @@ private:
     // Game methods
     BSGameState showMenu();
     void startNewSinglePlayerGame();
+    void runSinglePlayerGame();
     void startNewMultiPlayerGame();
+    void runMultiPlayerGame();
 
     void showPlaceShipsForPlayer(BSPlayer *aPlayer);
     void showTurnOfPlayer(BSPlayer *aPlayer, BSPlayer *aOpponent);
@@ -60,7 +62,7 @@ private:
 
 
     // Animates players maps
-    void animateFromPlayerToPlayer(BSPlayer *aPlayer, BSPlayer *aOpponent, bool animateUp);
+    void animateFromPlayerToPlayer(BSPlayer *startPlayer, BSPlayer *endPlayer, bool animateUp);
 
     // fills player 2 with random data
     void createMapForAI();
@@ -74,7 +76,6 @@ private:
     ArdBitmap ardbitmap = ArdBitmap(arduboy.getBuffer(), Arduboy2::width(), Arduboy2::height());
     Tinyfont tinyfont = Tinyfont(arduboy.getBuffer(), Arduboy2::width(), Arduboy2::height());
     BSGameState gameState;
-    Point cursorPosition;
 
     // Shipdata for players
     uint8_t const playerShipList[BS_SHIPS_PER_PLAYER] = {2,0,0,0,0,0,0,0};

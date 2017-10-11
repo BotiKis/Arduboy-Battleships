@@ -3,7 +3,6 @@
 BSPlayer::BSPlayer(){
   resetPlayer();
   playerName = new char[PLAYERNAME_LENGTH+1];
-  cursorPosition = {0,0};
 }
 
 BSPlayer::~BSPlayer(){
@@ -11,6 +10,8 @@ BSPlayer::~BSPlayer(){
 }
 
 void BSPlayer::resetPlayer(){
+  cursorPosition = {0,0};
+  
   // clean map
   for (uint8_t i = 0; i < BS_MAP_SIZE; i++) {
     for (uint8_t j = 0; j < BS_MAP_SIZE; j++) {
@@ -141,4 +142,13 @@ char* BSPlayer::getPlayerName(){
 
 uint8_t BSPlayer::getRemainingShips(){
   return remainingShips;
+}
+
+Point BSPlayer::getCursorPosition(){
+  return cursorPosition;
+}
+
+void BSPlayer::setCursorPosition(Point newPosition){
+  cursorPosition.x = newPosition.x;
+  cursorPosition.y = newPosition.y;
 }

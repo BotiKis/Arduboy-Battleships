@@ -37,39 +37,14 @@ void BSGame::run(){
 
       switch (gameState) {
         case BSGameStatePlayingSinglePlayer:{
-          // place ships
-          showPlaceShipsForPlayer(&player1);
-          createMapForAI();
-
           // start game
           startNewSinglePlayerGame();
-
-          // end
           this->gameState = BSGameStateMenu;
-
           break;
         }
         case BSGameStatePlayingMultiPlayer:{
-
-          static char titleBuffer[32];
-
-          // place ships player 1
-          sprintf(titleBuffer, "%s place\nyour ships!", player1.getPlayerName());
-          showOKDialog(titleBuffer);
-          showPlaceShipsForPlayer(&player1);
-
-
-          // place ships player 2
-          sprintf(titleBuffer, "%s place\nyour ships!", player2.getPlayerName());
-          showOKDialog(titleBuffer);
-          showPlaceShipsForPlayer(&player2);
-
-          // start game
           startNewMultiPlayerGame();
-
-          // end
           this->gameState = BSGameStateMenu;
-
           break;
         }
         case BSGameStateOptions:{

@@ -37,13 +37,16 @@ public:
 
   uint8_t getRemainingShips();
 
-  Point cursorPosition;
+  // accessor for cursor
+  Point getCursorPosition();
+  void setCursorPosition(Point newPosition);
 
 private:
   // stores the players map
   uint16_t playerMap[BS_MAP_SIZE][BS_MAP_SIZE] = {{0}};
   char *playerName;
   uint8_t remainingShips;
+  Point cursorPosition;
 };
 
 #endif

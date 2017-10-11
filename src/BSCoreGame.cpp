@@ -3,6 +3,92 @@
 #include "BSMapTileData.h"
 #include "BSAnimationHelper.h"
 
+
+void BSGame::startNewSinglePlayerGame(){
+  // reset players
+  player1.resetPlayer();
+  player2.resetPlayer();
+
+  player1.setPlayerName("Player");
+  player2.setPlayerName("Computer");
+
+  player1.setCursorPosition({BS_MAP_SIZE/2,BS_MAP_SIZE/2});
+
+  // place ships
+  showPlaceShipsForPlayer(&player1);
+
+  // place AI
+  createMapForAI();
+
+  // run game
+  runSinglePlayerGame();
+}
+
+void BSGame::runSinglePlayerGame(){
+  showOKDialog("Singleplayer");
+}
+
+void BSGame::startNewMultiPlayerGame(){
+  // reset players
+  player1.resetPlayer();
+  player2.resetPlayer();
+
+  player1.setPlayerName("Player 1");
+  player2.setPlayerName("Player 2");
+
+  // set start cursor
+  player1.setCursorPosition({BS_MAP_SIZE/2,BS_MAP_SIZE/2});
+  player2.setCursorPosition({BS_MAP_SIZE/2,BS_MAP_SIZE/2});
+
+  static char titleBuffer[32];
+
+  // place ships player 1
+  sprintf(titleBuffer, "%s place\nyour ships!", player1.getPlayerName());
+  showOKDialog(titleBuffer);
+  showPlaceShipsForPlayer(&player1);
+
+  // place ships player 2
+  sprintf(titleBuffer, "%s place\nyour ships!", player2.getPlayerName());
+  showOKDialog(titleBuffer);
+  showPlaceShipsForPlayer(&player2);
+
+  // start game
+  runMultiPlayerGame();
+}
+
+void BSGame::runMultiPlayerGame(){
+  BSPlayer *attackingPlayer, *passivePlayer;
+
+  // randomize player
+  bool randPlayer = (random()%2) == 0;
+  attackingPlayer = randPlayer?&player1:&player2;
+  passivePlayer = randPlayer?&player2:&player1;
+
+  static char titleBuffer[32];
+
+  // game loop
+  while(true){
+    sprintf(titleBuffer, "%s TURN!", attackingPlayer->getPlayerName());
+    showOKDialog(titleBuffer);
+
+    showTurnOfPlayer(attackingPlayer, passivePlayer);
+
+    // check for end
+    if (passivePlayer->getRemainingShips() <= 0) {
+      sprintf(titleBuffer, "%s WON!\n YEAAAH", attackingPlayer->getPlayerName());
+      showOKDialog(titleBuffer);
+      return;
+    }
+
+    animateFromPlayerToPlayer(attackingPlayer, passivePlayer, attackingPlayer == &player1);
+
+    // switch players
+    BSPlayer *playerBuff = attackingPlayer;
+    attackingPlayer = passivePlayer;
+    passivePlayer = playerBuff;
+  }
+}
+
 void BSGame::showPlaceShipsForPlayer(BSPlayer *aPlayer){
   // get number of ships
   int8_t shipCount = 0;
@@ -12,7 +98,7 @@ void BSGame::showPlaceShipsForPlayer(BSPlayer *aPlayer){
 
   // point where the map will be drawn
   Point cameraPosition = {0,0};
-  Point newCursorPos = {0, 0};
+  Point newCursorPos = aPlayer->getCursorPosition();
 
   // verticality
   bool placeVertical = false;
@@ -34,9 +120,9 @@ void BSGame::showPlaceShipsForPlayer(BSPlayer *aPlayer){
 
       // Handle ship placement
       if (arduboy.justPressed(B_BUTTON)){
-        if (!aPlayer->detectShipCollisionOnMap(aPlayer->cursorPosition.x, aPlayer->cursorPosition.y, currentShipLength, placeVertical)) {
+        if (!aPlayer->detectShipCollisionOnMap(aPlayer->getCursorPosition().x, aPlayer->getCursorPosition().y, currentShipLength, placeVertical)) {
           // place ship
-          aPlayer->addShip(aPlayer->cursorPosition.x, aPlayer->cursorPosition.y, currentShipLength, shipCount-1, placeVertical);
+          aPlayer->addShip(aPlayer->getCursorPosition().x, aPlayer->getCursorPosition().y, currentShipLength, shipCount-1, placeVertical);
 
           shipCount--;
           break;
@@ -56,24 +142,24 @@ void BSGame::showPlaceShipsForPlayer(BSPlayer *aPlayer){
 
       // Move cursor
       if (arduboy.justPressed(DOWN_BUTTON)){
-        newCursorPos.y = aPlayer->cursorPosition.y+1;
+        newCursorPos.y = aPlayer->getCursorPosition().y+1;
+        newCursorPos.y = min(newCursorPos.y, BS_MAP_SIZE-1);
       }
       if (arduboy.justPressed(UP_BUTTON)){
-        newCursorPos.y = aPlayer->cursorPosition.y-1;
+        newCursorPos.y = aPlayer->getCursorPosition().y-1;
+        newCursorPos.y = max(newCursorPos.y, 0);
       }
       if (arduboy.justPressed(LEFT_BUTTON)){
-        newCursorPos.x = aPlayer->cursorPosition.x-1;
+        newCursorPos.x = aPlayer->getCursorPosition().x-1;
+        newCursorPos.x = max(newCursorPos.x, 0);
       }
       if (arduboy.justPressed(RIGHT_BUTTON)){
-        newCursorPos.x = aPlayer->cursorPosition.x+1;
+        newCursorPos.x = aPlayer->getCursorPosition().x+1;
+        newCursorPos.x = min(newCursorPos.x, BS_MAP_SIZE-1);
       }
-      newCursorPos.x = max(newCursorPos.x, 0);
-      newCursorPos.x = min(newCursorPos.x, BS_MAP_SIZE-1);
-      newCursorPos.y = max(newCursorPos.y, 0);
-      newCursorPos.y = min(newCursorPos.y, BS_MAP_SIZE-1);
 
       // update cursor position
-      aPlayer->cursorPosition = newCursorPos;
+      aPlayer->setCursorPosition(newCursorPos);
 
       // handle animators
       // cursor
@@ -84,8 +170,8 @@ void BSGame::showPlaceShipsForPlayer(BSPlayer *aPlayer){
 
       // Map
       // tile height is 32 and width 16, all sprites are 32x32 for simplicity and overdrawing
-      cameraPosition.x = mapOrigin.x - (aPlayer->cursorPosition.x - aPlayer->cursorPosition.y)*16;
-      cameraPosition.y = mapOrigin.y - (aPlayer->cursorPosition.x + aPlayer->cursorPosition.y)*8;
+      cameraPosition.x = mapOrigin.x - (aPlayer->getCursorPosition().x - aPlayer->getCursorPosition().y)*16;
+      cameraPosition.y = mapOrigin.y - (aPlayer->getCursorPosition().x + aPlayer->getCursorPosition().y)*8;
       drawMapAtPosition(cameraPosition.x, cameraPosition.y, aPlayer, true);
 
       // draw cursor
@@ -142,55 +228,10 @@ void BSGame::createMapForAI(){
 
 }
 
-void BSGame::startNewSinglePlayerGame(){
-  player1.resetPlayer();
-  showOKDialog("Singleplayer");
-}
-
-void BSGame::startNewMultiPlayerGame(){
-  player1.resetPlayer();
-  player2.resetPlayer();
-
-  player1.setPlayerName("Player 1");
-  player2.setPlayerName("Player 2");
-
-  BSPlayer *attackingPlayer, *passivePlayer;
-
-  // randomize player
-  bool randPlayer = (random()%2) == 0;
-  attackingPlayer = randPlayer?&player1:&player2;
-  passivePlayer = randPlayer?&player2:&player1;
-
-  static char titleBuffer[32];
-
-  // game loop
-  while(true){
-    sprintf(titleBuffer, "%s TURN!", attackingPlayer->getPlayerName());
-    showOKDialog(titleBuffer);
-
-    showTurnOfPlayer(attackingPlayer, passivePlayer);
-
-    // check for end
-    if (passivePlayer->getRemainingShips() <= 0) {
-      sprintf(titleBuffer, "%s WON!\n YEAAAH", attackingPlayer->getPlayerName());
-      showOKDialog(titleBuffer);
-      return;
-    }
-
-    animateFromPlayerToPlayer(attackingPlayer, passivePlayer, false);
-
-    // switch players
-    BSPlayer *playerBuff = attackingPlayer;
-    attackingPlayer = passivePlayer;
-    passivePlayer = playerBuff;
-  }
-}
-
-
 void BSGame::showTurnOfPlayer(BSPlayer *aPlayer, BSPlayer *aOpponent){
   // point where the map will be drawn
   Point cameraPosition = {0,0};
-  Point newCursorPos;
+  Point newCursorPos = aPlayer->getCursorPosition();
 
   // animatiors
   bool animatorCursor = false;
@@ -206,29 +247,29 @@ void BSGame::showTurnOfPlayer(BSPlayer *aPlayer, BSPlayer *aOpponent){
 
     // show dialog to fire
     if (arduboy.justPressed(B_BUTTON)){
-      if(showAimMenuOnPlayersMap(mapOrigin, aPlayer->cursorPosition, aOpponent) == BSGameStatePlayingNextTurn) return;
+      if(showAimMenuOnPlayersMap(mapOrigin, aPlayer->getCursorPosition(), aOpponent) == BSGameStatePlayingNextTurn) return;
     }
 
     // Move cursor
     if (arduboy.justPressed(DOWN_BUTTON)){
-      newCursorPos.y = aPlayer->cursorPosition.y+1;
+      newCursorPos.y = aPlayer->getCursorPosition().y+1;
+      newCursorPos.y = min(newCursorPos.y, BS_MAP_SIZE-1);
     }
     if (arduboy.justPressed(UP_BUTTON)){
-      newCursorPos.y = aPlayer->cursorPosition.y-1;
+      newCursorPos.y = aPlayer->getCursorPosition().y-1;
+      newCursorPos.y = max(newCursorPos.y, 0);
     }
     if (arduboy.justPressed(LEFT_BUTTON)){
-      newCursorPos.x = aPlayer->cursorPosition.x-1;
+      newCursorPos.x = aPlayer->getCursorPosition().x-1;
+      newCursorPos.x = max(newCursorPos.x, 0);
     }
     if (arduboy.justPressed(RIGHT_BUTTON)){
-      newCursorPos.x = aPlayer->cursorPosition.x+1;
+      newCursorPos.x = aPlayer->getCursorPosition().x+1;
+      newCursorPos.x = min(newCursorPos.x, BS_MAP_SIZE-1);
     }
-    newCursorPos.x = max(newCursorPos.x, 0);
-    newCursorPos.x = min(newCursorPos.x, BS_MAP_SIZE-1);
-    newCursorPos.y = max(newCursorPos.y, 0);
-    newCursorPos.y = min(newCursorPos.y, BS_MAP_SIZE-1);
 
     // update cursor position
-    aPlayer->cursorPosition = newCursorPos;
+    aPlayer->setCursorPosition(newCursorPos);
 
     // handle animators
     // cursor
@@ -239,8 +280,10 @@ void BSGame::showTurnOfPlayer(BSPlayer *aPlayer, BSPlayer *aOpponent){
 
     // Map
     // tile height is 32 and width 16
-    cameraPosition.x = mapOrigin.x - (aPlayer->cursorPosition.x - aPlayer->cursorPosition.y)*16;
-    cameraPosition.y = mapOrigin.y - (aPlayer->cursorPosition.x + aPlayer->cursorPosition.y)*8;
+    cameraPosition.x = mapOrigin.x - (aPlayer->getCursorPosition().x - aPlayer->getCursorPosition().y)*16;
+    cameraPosition.y = mapOrigin.y - (aPlayer->getCursorPosition().x + aPlayer->getCursorPosition().y)*8;
+
+
     drawMapAtPosition(cameraPosition.x, cameraPosition.y, aOpponent, false);
 
     if(animatorCursor) arduboy.drawBitmap(mapOrigin.x, mapOrigin.y+16, BitmapCursorDotted32x16, 32, 16, WHITE);
@@ -304,12 +347,12 @@ BSGameState BSGame::showAimMenuOnPlayersMap(Point mapOrigin, Point cursorPos, BS
       if (menuCursorIdx == 0){
 
         // draw rocket and explosion
-        drawExplosionAnimation(mapOrigin, cursorPosition, aPlayer);
+        drawExplosionAnimation(mapOrigin, cursorPos, aPlayer);
         char dialogText[16] = {'\0'};
 
         // check for shipSprite
-        if (aPlayer->isShipTileAtPosition(cursorPosition.x, cursorPosition.y)) {
-          aPlayer->destroyTileAtPosition(cursorPosition.x, cursorPosition.y);
+        if (aPlayer->isShipTileAtPosition(cursorPos.x, cursorPos.y)) {
+          aPlayer->destroyTileAtPosition(cursorPos.x, cursorPos.y);
           strcpy(dialogText, "HIT!");
         }
         else{
@@ -360,21 +403,26 @@ BSGameState BSGame::showAimMenuOnPlayersMap(Point mapOrigin, Point cursorPos, BS
 }
 
 
-void BSGame::animateFromPlayerToPlayer(BSPlayer *aPlayer, BSPlayer *aOpponent, bool animateUp){
+void BSGame::animateFromPlayerToPlayer(BSPlayer *startPlayer, BSPlayer *endPlayer, bool animateUp){
 
-  Point mapSize;
-  mapSize.x = BS_MAP_SIZE*16;
-  mapSize.y = BS_MAP_SIZE*8;
+  Point startPositionActivePlayer;
+  Point endPositionActivePlayer;
+  startPositionActivePlayer.x = mapOrigin.x - (startPlayer->getCursorPosition().x - startPlayer->getCursorPosition().y)*16;
+  startPositionActivePlayer.y = mapOrigin.y - (startPlayer->getCursorPosition().x + startPlayer->getCursorPosition().y)*8;
 
-  Point startPosition;
-  startPosition.x = mapOrigin.x - (aPlayer->cursorPosition.x - aPlayer->cursorPosition.y)*16;
-  startPosition.y = mapOrigin.y - (aPlayer->cursorPosition.x + aPlayer->cursorPosition.y)*8;
+  Point endPositionPassivePlayer;
+  Point startPositionPassivePlayer;
+  endPositionPassivePlayer.x = mapOrigin.x - (endPlayer->getCursorPosition().x - endPlayer->getCursorPosition().y)*16;
+  endPositionPassivePlayer.y = mapOrigin.y - (endPlayer->getCursorPosition().x + endPlayer->getCursorPosition().y)*8;
 
-  Point endPosition;
-  endPosition.x = mapOrigin.x + mapSize.x - (aOpponent->cursorPosition.x - aOpponent->cursorPosition.y)*16;
-  endPosition.y = mapOrigin.y + mapSize.x - (aOpponent->cursorPosition.x + aOpponent->cursorPosition.y)*8;
+  startPositionPassivePlayer.x = startPositionActivePlayer.x + BS_MAP_SIZE*16*(animateUp?1:-1);
+  startPositionPassivePlayer.y = startPositionActivePlayer.y + BS_MAP_SIZE*8*(animateUp?-1:1);
 
-  Point currentPos;
+  endPositionActivePlayer.x = endPositionPassivePlayer.x + BS_MAP_SIZE*16*(animateUp?-1:1);
+  endPositionActivePlayer.y = endPositionPassivePlayer.y + BS_MAP_SIZE*8*(animateUp?1:-1);
+
+  Point mapPositionStartPlayer;
+  Point mapPositionEndPlayer;
 
   // set up animation
   uint64_t deltaTime = 0;
@@ -389,16 +437,18 @@ void BSGame::animateFromPlayerToPlayer(BSPlayer *aPlayer, BSPlayer *aOpponent, b
       // get deltatime
       deltaTime = MILLIS_SINCE(animationStart);
 
-      // exit if animation has ended
-      if (deltaTime > animationDuration) return;
-
       // get new position
-      currentPos = animatePointFromToPoint(startPosition, endPosition, deltaTime*100/animationDuration);
+      mapPositionStartPlayer = animatePointFromToPoint(startPositionActivePlayer, endPositionActivePlayer, deltaTime*100/animationDuration);
+      mapPositionEndPlayer = animatePointFromToPoint(startPositionPassivePlayer, endPositionPassivePlayer, deltaTime*100/animationDuration);
 
       arduboy.clear();
 
-      drawMapAtPosition(currentPos.x, currentPos.y, aPlayer, false);
+      drawMapAtPosition(mapPositionStartPlayer.x, mapPositionStartPlayer.y, endPlayer, false);
+      drawMapAtPosition(mapPositionEndPlayer.x, mapPositionEndPlayer.y, startPlayer, false);
 
       arduboy.display();
+
+      // exit if animation has ended
+      if (deltaTime > animationDuration) return;
   }
 }
