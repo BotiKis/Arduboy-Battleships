@@ -3,6 +3,7 @@
 BSPlayer::BSPlayer(){
   resetPlayer();
   playerName = new char[PLAYERNAME_LENGTH+1];
+  cursorPosition = {0,0};
 }
 
 BSPlayer::~BSPlayer(){

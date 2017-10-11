@@ -34,9 +34,9 @@ void BSGame::showPlaceShipsForPlayer(BSPlayer *aPlayer){
 
       // Handle ship placement
       if (arduboy.justPressed(B_BUTTON)){
-        if (!aPlayer->detectShipCollisionOnMap(cursorPosition.x, cursorPosition.y, currentShipLength, placeVertical)) {
+        if (!aPlayer->detectShipCollisionOnMap(aPlayer->cursorPosition.x, aPlayer->cursorPosition.y, currentShipLength, placeVertical)) {
           // place ship
-          aPlayer->addShip(cursorPosition.x, cursorPosition.y, currentShipLength, shipCount-1, placeVertical);
+          aPlayer->addShip(aPlayer->cursorPosition.x, aPlayer->cursorPosition.y, currentShipLength, shipCount-1, placeVertical);
 
           shipCount--;
           break;
@@ -56,16 +56,16 @@ void BSGame::showPlaceShipsForPlayer(BSPlayer *aPlayer){
 
       // Move cursor
       if (arduboy.justPressed(DOWN_BUTTON)){
-        newCursorPos.y = cursorPosition.y+1;
+        newCursorPos.y = aPlayer->cursorPosition.y+1;
       }
       if (arduboy.justPressed(UP_BUTTON)){
-        newCursorPos.y = cursorPosition.y-1;
+        newCursorPos.y = aPlayer->cursorPosition.y-1;
       }
       if (arduboy.justPressed(LEFT_BUTTON)){
-        newCursorPos.x = cursorPosition.x-1;
+        newCursorPos.x = aPlayer->cursorPosition.x-1;
       }
       if (arduboy.justPressed(RIGHT_BUTTON)){
-        newCursorPos.x = cursorPosition.x+1;
+        newCursorPos.x = aPlayer->cursorPosition.x+1;
       }
       newCursorPos.x = max(newCursorPos.x, 0);
       newCursorPos.x = min(newCursorPos.x, BS_MAP_SIZE-1);
@@ -74,7 +74,7 @@ void BSGame::showPlaceShipsForPlayer(BSPlayer *aPlayer){
 
       // check cursor change
       // smooth anim if changed
-      if (!pointIsEqualToPoint(cursorPosition, newCursorPos)) {
+      if (!pointIsEqualToPoint(aPlayer->cursorPosition, newCursorPos)) {
 
         // set up animation
         uint64_t animationStart = millis();
@@ -126,7 +126,7 @@ void BSGame::showPlaceShipsForPlayer(BSPlayer *aPlayer){
       }
 
       // update cursor position
-      cursorPosition = newCursorPos;
+      aPlayer->cursorPosition = newCursorPos;
 
       // handle animators
       // cursor
@@ -137,8 +137,8 @@ void BSGame::showPlaceShipsForPlayer(BSPlayer *aPlayer){
 
       // Map
       // tile height is 32 and width 16, all sprites are 32x32 for simplicity and overdrawing
-      cameraPosition.x = mapOrigin.x - (cursorPosition.x - cursorPosition.y)*16;
-      cameraPosition.y = mapOrigin.y - (cursorPosition.x + cursorPosition.y)*8;
+      cameraPosition.x = mapOrigin.x - (aPlayer->cursorPosition.x - aPlayer->cursorPosition.y)*16;
+      cameraPosition.y = mapOrigin.y - (aPlayer->cursorPosition.x + aPlayer->cursorPosition.y)*8;
       drawMapAtPosition(cameraPosition.x, cameraPosition.y, aPlayer, true);
 
       // draw cursor
@@ -161,7 +161,6 @@ void BSGame::showPlaceShipsForPlayer(BSPlayer *aPlayer){
     }
   }
 }
-
 
 void BSGame::createMapForAI(){
   player2.resetPlayer();
@@ -197,10 +196,17 @@ void BSGame::createMapForAI(){
 }
 
 void BSGame::startNewSinglePlayerGame(){
+  player1.resetPlayer();
   showOKDialog("Singleplayer");
 }
 
 void BSGame::startNewMultiPlayerGame(){
+  player1.resetPlayer();
+  player2.resetPlayer();
+
+  player1.setPlayerName("Player 1");
+  player2.setPlayerName("Player 2");
+
   BSPlayer *attackingPlayer, *passivePlayer;
 
   // randomize player
@@ -236,7 +242,6 @@ void BSGame::startNewMultiPlayerGame(){
 
 void BSGame::showTurnOfPlayer(BSPlayer *aPlayer, BSPlayer *aOpponent){
   // point where the map will be drawn
-  cursorPosition = {0,0};
   Point cameraPosition = {0,0};
   Point newCursorPos;
 
@@ -254,21 +259,21 @@ void BSGame::showTurnOfPlayer(BSPlayer *aPlayer, BSPlayer *aOpponent){
 
     // show dialog to fire
     if (arduboy.justPressed(B_BUTTON)){
-      if(showAimMenuOnPlayersMap(mapOrigin, cursorPosition, aOpponent) == BSGameStatePlayingNextTurn) return;
+      if(showAimMenuOnPlayersMap(mapOrigin, aPlayer->cursorPosition, aOpponent) == BSGameStatePlayingNextTurn) return;
     }
 
     // Move cursor
     if (arduboy.justPressed(DOWN_BUTTON)){
-      newCursorPos.y = cursorPosition.y+1;
+      newCursorPos.y = aPlayer->cursorPosition.y+1;
     }
     if (arduboy.justPressed(UP_BUTTON)){
-      newCursorPos.y = cursorPosition.y-1;
+      newCursorPos.y = aPlayer->cursorPosition.y-1;
     }
     if (arduboy.justPressed(LEFT_BUTTON)){
-      newCursorPos.x = cursorPosition.x-1;
+      newCursorPos.x = aPlayer->cursorPosition.x-1;
     }
     if (arduboy.justPressed(RIGHT_BUTTON)){
-      newCursorPos.x = cursorPosition.x+1;
+      newCursorPos.x = aPlayer->cursorPosition.x+1;
     }
     newCursorPos.x = max(newCursorPos.x, 0);
     newCursorPos.x = min(newCursorPos.x, BS_MAP_SIZE-1);
@@ -277,7 +282,7 @@ void BSGame::showTurnOfPlayer(BSPlayer *aPlayer, BSPlayer *aOpponent){
 
     // check cursor change
     // smooth anim if changed
-    if (!pointIsEqualToPoint(cursorPosition, newCursorPos)) {
+    if (!pointIsEqualToPoint(aPlayer->cursorPosition, newCursorPos)) {
 
       // set up animation
       uint64_t animationStart = millis();
@@ -327,7 +332,7 @@ void BSGame::showTurnOfPlayer(BSPlayer *aPlayer, BSPlayer *aOpponent){
     }
 
     // update cursor position
-    cursorPosition = newCursorPos;
+    aPlayer->cursorPosition = newCursorPos;
 
     // handle animators
     // cursor
@@ -338,8 +343,8 @@ void BSGame::showTurnOfPlayer(BSPlayer *aPlayer, BSPlayer *aOpponent){
 
     // Map
     // tile height is 32 and width 16
-    cameraPosition.x = mapOrigin.x - (cursorPosition.x - cursorPosition.y)*16;
-    cameraPosition.y = mapOrigin.y - (cursorPosition.x + cursorPosition.y)*8;
+    cameraPosition.x = mapOrigin.x - (aPlayer->cursorPosition.x - aPlayer->cursorPosition.y)*16;
+    cameraPosition.y = mapOrigin.y - (aPlayer->cursorPosition.x + aPlayer->cursorPosition.y)*8;
     drawMapAtPosition(cameraPosition.x, cameraPosition.y, aOpponent, false);
 
     if(animatorCursor) arduboy.drawBitmap(mapOrigin.x, mapOrigin.y+16, BitmapCursorDotted32x16, 32, 16, WHITE);

@@ -42,7 +42,7 @@ private:
     BSGameState showMenu();
     void startNewSinglePlayerGame();
     void startNewMultiPlayerGame();
-    void resetGame();
+
     void showPlaceShipsForPlayer(BSPlayer *aPlayer);
     void showTurnOfPlayer(BSPlayer *aPlayer, BSPlayer *aOpponent);
 

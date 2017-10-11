@@ -37,6 +37,8 @@ public:
 
   uint8_t getRemainingShips();
 
+  Point cursorPosition;
+
 private:
   // stores the players map
   uint16_t playerMap[BS_MAP_SIZE][BS_MAP_SIZE] = {{0}};

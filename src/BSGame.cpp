@@ -37,9 +37,6 @@ void BSGame::run(){
 
       switch (gameState) {
         case BSGameStatePlayingSinglePlayer:{
-          // reset Game
-          resetGame();
-
           // place ships
           showPlaceShipsForPlayer(&player1);
           createMapForAI();
@@ -53,8 +50,6 @@ void BSGame::run(){
           break;
         }
         case BSGameStatePlayingMultiPlayer:{
-          // reset Game
-          resetGame();
 
           static char titleBuffer[32];
 
@@ -135,19 +130,6 @@ BSGameState BSGame::showMenu(){
     arduboy.display();
   }
 }
-
-void BSGame::resetGame(){
-
-  player1.resetPlayer();
-  player2.resetPlayer();
-
-  player1.setPlayerName("Player 1");
-  player2.setPlayerName("Player 2");
-
-  // reset cursor
-  cursorPosition = {0,0};
-}
-
 //
 void BSGame::drawMapAtPosition(int16_t posX, int16_t posY, BSPlayer *aPlayer, bool drawShips){
 
