@@ -72,59 +72,6 @@ void BSGame::showPlaceShipsForPlayer(BSPlayer *aPlayer){
       newCursorPos.y = max(newCursorPos.y, 0);
       newCursorPos.y = min(newCursorPos.y, BS_MAP_SIZE-1);
 
-      // check cursor change
-      // smooth anim if changed
-      if (!pointIsEqualToPoint(aPlayer->cursorPosition, newCursorPos)) {
-
-        // set up animation
-        uint64_t animationStart = millis();
-        uint64_t deltaTime = 0;
-        uint16_t mapAnimTime = 200;
-
-        // end position
-        cameraPosition.x = mapOrigin.x - (cursorPosition.x - cursorPosition.y)*16;
-        cameraPosition.y = mapOrigin.y - (cursorPosition.x + cursorPosition.y)*8;
-
-        Point endPosition;
-        endPosition.x = mapOrigin.x - (newCursorPos.x - newCursorPos.y)*16;
-        endPosition.y = mapOrigin.y - (newCursorPos.x + newCursorPos.y)*8;
-
-        Point animPosition;
-
-        while (true) {
-
-          // wait for next frame with drawing
-          if (!arduboy.nextFrame()) continue;
-
-          // get deltatime
-          deltaTime = MILLIS_SINCE(animationStart);
-
-          // exit if animation has ended
-          if (deltaTime > mapAnimTime) break;
-
-          // Drawing
-          arduboy.clear();
-
-          animPosition = animatePointFromToPoint(cameraPosition, endPosition, deltaTime*100/mapAnimTime);
-          drawMapAtPosition(animPosition.x, animPosition.y, aPlayer, true);
-
-          drawShipAtPosition(mapOrigin.x, mapOrigin.y, currentShipLength, placeVertical);
-
-          // Infobox
-          arduboy.fillRect(73,0,55,19,WHITE);
-          arduboy.fillRect(74,0,54,18,BLACK);
-          tinyfont.setCursor(76,3);
-          tinyfont.print(F("PLACE SHIP"));
-
-          tinyfont.setCursor(76,10);
-          char shipNameBuf[16] = "\0";
-          strcpy(shipNameBuf, shipNameForLength(currentShipLength));
-          tinyfont.print(shipNameBuf);
-
-          arduboy.display();
-        }
-      }
-
       // update cursor position
       aPlayer->cursorPosition = newCursorPos;
 
@@ -280,57 +227,6 @@ void BSGame::showTurnOfPlayer(BSPlayer *aPlayer, BSPlayer *aOpponent){
     newCursorPos.y = max(newCursorPos.y, 0);
     newCursorPos.y = min(newCursorPos.y, BS_MAP_SIZE-1);
 
-    // check cursor change
-    // smooth anim if changed
-    if (!pointIsEqualToPoint(aPlayer->cursorPosition, newCursorPos)) {
-
-      // set up animation
-      uint64_t animationStart = millis();
-      uint64_t deltaTime = 0;
-      uint16_t mapAnimTime = 130;
-
-      // end position
-      Point endPosition;
-      endPosition.x = mapOrigin.x - (newCursorPos.x - newCursorPos.y)*16;
-      endPosition.y = mapOrigin.y - (newCursorPos.x + newCursorPos.y)*8;
-
-      cameraPosition.x = mapOrigin.x - (cursorPosition.x - cursorPosition.y)*16;
-      cameraPosition.y = mapOrigin.y - (cursorPosition.x + cursorPosition.y)*8;
-
-      Point animPosition;
-
-      while (true) {
-
-        // wait for next frame with drawing
-        if (!arduboy.nextFrame()) continue;
-
-        // get deltatime
-        deltaTime = MILLIS_SINCE(animationStart);
-
-        // exit if animation has ended
-        if (deltaTime > mapAnimTime) break;
-
-        // Drawing
-        arduboy.clear();
-
-        animPosition = animatePointFromToPoint(cameraPosition, endPosition, deltaTime*100/mapAnimTime);
-        drawMapAtPosition(animPosition.x, animPosition.y, aOpponent, false);
-
-        // Infobox
-        arduboy.fillRect(73,0,55,19,WHITE);
-        arduboy.fillRect(74,0,54,18,BLACK);
-
-        // Print palyername
-        tinyfont.setCursor(76,3);
-        tinyfont.print(aPlayer->getPlayerName());
-
-        tinyfont.setCursor(76,10);
-        tinyfont.print(F("AIM!"));
-
-        arduboy.display();
-      }
-    }
-
     // update cursor position
     aPlayer->cursorPosition = newCursorPos;
 
@@ -466,13 +362,17 @@ BSGameState BSGame::showAimMenuOnPlayersMap(Point mapOrigin, Point cursorPos, BS
 
 void BSGame::animateFromPlayerToPlayer(BSPlayer *aPlayer, BSPlayer *aOpponent, bool animateUp){
 
+  Point mapSize;
+  mapSize.x = BS_MAP_SIZE*16;
+  mapSize.y = BS_MAP_SIZE*8;
+
   Point startPosition;
-  startPosition.x = mapOrigin.x;
-  startPosition.y = mapOrigin.y;
+  startPosition.x = mapOrigin.x - (aPlayer->cursorPosition.x - aPlayer->cursorPosition.y)*16;
+  startPosition.y = mapOrigin.y - (aPlayer->cursorPosition.x + aPlayer->cursorPosition.y)*8;
 
   Point endPosition;
-  endPosition.x = mapOrigin.x + BS_MAP_SIZE*16 * animateUp?1:-1;
-  endPosition.y = mapOrigin.y + BS_MAP_SIZE*8 * animateUp?-1:1;
+  endPosition.x = mapOrigin.x + mapSize.x - (aOpponent->cursorPosition.x - aOpponent->cursorPosition.y)*16;
+  endPosition.y = mapOrigin.y + mapSize.x - (aOpponent->cursorPosition.x + aOpponent->cursorPosition.y)*8;
 
   Point currentPos;
 
