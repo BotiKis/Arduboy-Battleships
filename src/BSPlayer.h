@@ -21,7 +21,8 @@ public:
 
   // destroys tile at position if its a shiptile and decrements the
   // shipcount when all shiptiles of the ships are destroyed
-  void destroyTileAtPosition(uint8_t posX, uint8_t posY);
+  // returns true if a ship has been sunk
+  bool destroyTileAtPosition(uint8_t posX, uint8_t posY);
 
   // Returns true if the given ship collides either with a mountain or other ship.
   bool detectShipCollisionOnMap(uint8_t posX, uint8_t posY, uint8_t length, bool vertical);

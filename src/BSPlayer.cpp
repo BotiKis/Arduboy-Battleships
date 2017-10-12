@@ -11,7 +11,7 @@ BSPlayer::~BSPlayer(){
 
 void BSPlayer::resetPlayer(){
   cursorPosition = {0,0};
-  
+
   // clean map
   for (uint8_t i = 0; i < BS_MAP_SIZE; i++) {
     for (uint8_t j = 0; j < BS_MAP_SIZE; j++) {
@@ -74,9 +74,14 @@ bool BSPlayer::isShipTileAtPosition(uint8_t posX, uint8_t posY){
   return MAP_TILE_TYPE(tileData) == MAP_TILE_TYPE_SHIP;
 }
 
-void BSPlayer::destroyTileAtPosition(uint8_t posX, uint8_t posY){
+bool BSPlayer::destroyTileAtPosition(uint8_t posX, uint8_t posY){
   // check if it's a shiptile which can be destroyed
   if (isShipTileAtPosition(posX, posY)) {
+
+    if (playerMap[posY][posX] & MAP_FLAG_IS_DESTROYED)
+      // ignore if already destroyed
+      return false;
+    else
       // mark shiptile as destroyed
       playerMap[posY][posX] |= MAP_FLAG_IS_DESTROYED;
 
@@ -89,15 +94,17 @@ void BSPlayer::destroyTileAtPosition(uint8_t posX, uint8_t posY){
           if (isShipTileAtPosition(j,i)) {
             currentTile = playerMap[i][j];
             if (MAP_SHIP_INDEX(currentTile) == shipIndex && !(currentTile & MAP_FLAG_IS_DESTROYED)) {
-              return;
+              return false;
             }
           }
         }
       }
 
       // if we are here, there are no remaining shipTiles with the same index
+      // so the ship has been sunk
       // decrease shipcount
       remainingShips = max(0, remainingShips-1);
+      return true;
   }
 }
 
