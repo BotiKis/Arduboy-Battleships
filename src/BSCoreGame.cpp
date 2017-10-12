@@ -424,10 +424,16 @@ void BSGame::animateFromPlayerToPlayer(BSPlayer *startPlayer, BSPlayer *endPlaye
   Point mapPositionStartPlayer;
   Point mapPositionEndPlayer;
 
+  Point deltaVector;
+  deltaVector.x = startPositionActivePlayer.x - startPositionPassivePlayer.x;
+  deltaVector.y = startPositionActivePlayer.y - startPositionPassivePlayer.y;
+  uint16_t deltaLen = sqrt(deltaVector.x*deltaVector.x + deltaVector.y*deltaVector.y);
+
   // set up animation
   uint64_t deltaTime = 0;
-  const uint16_t animationDuration = 500;
+  const uint16_t animationDuration = 666 + ((deltaLen*200)/32);
   uint64_t animationStart = millis();
+  uint8_t progress = 0;
 
   while (true) {
 
@@ -436,10 +442,11 @@ void BSGame::animateFromPlayerToPlayer(BSPlayer *startPlayer, BSPlayer *endPlaye
 
       // get deltatime
       deltaTime = MILLIS_SINCE(animationStart);
+      progress = min(deltaTime*100/animationDuration, 100);
 
       // get new position
-      mapPositionStartPlayer = animatePointFromToPoint(startPositionActivePlayer, endPositionActivePlayer, deltaTime*100/animationDuration);
-      mapPositionEndPlayer = animatePointFromToPoint(startPositionPassivePlayer, endPositionPassivePlayer, deltaTime*100/animationDuration);
+      mapPositionStartPlayer = animatePointFromToPoint(startPositionActivePlayer, endPositionActivePlayer, progress);
+      mapPositionEndPlayer = animatePointFromToPoint(startPositionPassivePlayer, endPositionPassivePlayer, progress);
 
       arduboy.clear();
 
@@ -449,6 +456,10 @@ void BSGame::animateFromPlayerToPlayer(BSPlayer *startPlayer, BSPlayer *endPlaye
       arduboy.display();
 
       // exit if animation has ended
-      if (deltaTime > animationDuration) return;
+      if (deltaTime >= animationDuration) break;
   }
+
+  arduboy.clear();
+  drawMapAtPosition(endPositionPassivePlayer.x, endPositionPassivePlayer.y, startPlayer, false);
+  arduboy.display();
 }
