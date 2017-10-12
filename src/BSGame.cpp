@@ -173,6 +173,11 @@ void BSGame::drawMapAtPosition(int16_t posX, int16_t posY, BSPlayer *aPlayer, bo
           }
       }
 
+      // draw missed water
+      else if (mapTileType == MAP_TILE_TYPE_MISS) {
+        arduboy.drawBitmap(drawPosition.x, drawPosition.y+16, BitmapCursorDotted32x16, 32, 16, WHITE);
+      }
+
       // Check for Ship
       else if (mapTileType == MAP_TILE_TYPE_SHIP){
 

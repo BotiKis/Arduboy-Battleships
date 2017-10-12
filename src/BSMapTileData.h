@@ -13,13 +13,14 @@
 
 #define MAP_TILE_TYPE_POS       0
 
-// 4 bits tell the type of TILE
+// 3 bits tell the type of TILE
 #define MAP_TILE_TYPE(V) ((V >> MAP_TILE_TYPE_POS) & 0b111)
 
 #define MAP_TILE_TYPE_EMPTY     0
 #define MAP_TILE_TYPE_SHIP      1
 #define MAP_TILE_TYPE_MOUNTAIN  2
 #define MAP_TILE_TYPE_WATER     3
+#define MAP_TILE_TYPE_MISS      4
 
 ////////////////////////////////
 // Ship specific information
@@ -40,5 +41,6 @@
 
 // 3 bits tell the length/part count of the ship
 #define MAP_SHIPLENGTH(V) ((V >> MAP_SHIPLENGTH_BIT_POS) & 0b111)
+
 
 #endif

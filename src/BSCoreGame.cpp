@@ -356,7 +356,8 @@ BSGameState BSGame::showAimMenuOnPlayersMap(Point mapOrigin, Point cursorPos, BS
           strcpy(dialogText, "HIT!");
         }
         else{
-          strcpy(dialogText, "HAHA MISS!");
+          strcpy(dialogText, "HAHA MISS");
+          aPlayer->setMapTileAtPosition(cursorPos.y, cursorPos.x, MAP_TILE_TYPE_MISS);
         }
 
         arduboy.clear();
