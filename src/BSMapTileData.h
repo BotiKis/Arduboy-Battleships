@@ -2,7 +2,7 @@
 #define BSMAPTILEDATA_H
 
 // Size of map
-#define BS_MAP_SIZE 10
+#define BS_MAP_SIZE 8
 #define BS_SHIPS_PER_PLAYER 8
 
 // -------------------------------------------------------
