@@ -3,11 +3,12 @@
 #include "BSMapTileData.h"
 #include "BSAnimationHelper.h"
 
-
 void BSGame::startNewSinglePlayerGame(){
   // reset players
   player1.resetPlayer();
   player2.resetPlayer();
+
+  gameAI = new BSGameAI(&player1);
 
   player1.setPlayerName("Player");
   player2.setPlayerName("Computer");
@@ -22,10 +23,54 @@ void BSGame::startNewSinglePlayerGame(){
 
   // run game
   runSinglePlayerGame();
+
+  // release AI
+  delete gameAI;
+  gameAI = NULL;
 }
 
 void BSGame::runSinglePlayerGame(){
   showOKDialog("Singleplayer");
+
+  BSPlayer *attackingPlayer, *passivePlayer;
+
+  // randomize player
+  bool randPlayer = (random()%2) == 0;
+  attackingPlayer = randPlayer?&player1:&player2;
+  passivePlayer = randPlayer?&player2:&player1;
+
+  static char titleBuffer[32];
+
+  // game loop
+  while(true){
+    sprintf(titleBuffer, "%s TURN!", attackingPlayer->getPlayerName());
+    showOKDialog(titleBuffer);
+
+    for (size_t i = 0; i < attackingPlayer->getNumberOfTurns(); i++) {
+
+      if (attackingPlayer == &player1) {
+        // Player
+        showTurnOfPlayer(attackingPlayer, passivePlayer);
+      }
+      else{
+        // AI
+      }
+
+      // check for end
+      if (passivePlayer->getRemainingShips() <= 0) {
+        sprintf(titleBuffer, "%s WON!\n YEAAAH", attackingPlayer->getPlayerName());
+        showOKDialog(titleBuffer);
+        return;
+      }
+    }
+
+    animateFromPlayerToPlayer(attackingPlayer, passivePlayer, attackingPlayer == &player1);
+
+    // switch players
+    BSPlayer *playerBuff = attackingPlayer;
+    attackingPlayer = passivePlayer;
+    passivePlayer = playerBuff;
+  }
 }
 
 void BSGame::startNewMultiPlayerGame(){
@@ -71,13 +116,15 @@ void BSGame::runMultiPlayerGame(){
     sprintf(titleBuffer, "%s TURN!", attackingPlayer->getPlayerName());
     showOKDialog(titleBuffer);
 
-    showTurnOfPlayer(attackingPlayer, passivePlayer);
+    for (size_t i = 0; i < attackingPlayer->getNumberOfTurns(); i++) {
+      showTurnOfPlayer(attackingPlayer, passivePlayer);
 
-    // check for end
-    if (passivePlayer->getRemainingShips() <= 0) {
-      sprintf(titleBuffer, "%s WON!\n YEAAAH", attackingPlayer->getPlayerName());
-      showOKDialog(titleBuffer);
-      return;
+      // check for end
+      if (passivePlayer->getRemainingShips() <= 0) {
+        sprintf(titleBuffer, "%s WON!\n YEAAAH", attackingPlayer->getPlayerName());
+        showOKDialog(titleBuffer);
+        return;
+      }
     }
 
     animateFromPlayerToPlayer(attackingPlayer, passivePlayer, attackingPlayer == &player1);
@@ -122,7 +169,7 @@ void BSGame::showPlaceShipsForPlayer(BSPlayer *aPlayer){
       if (arduboy.justPressed(B_BUTTON)){
         if (!aPlayer->detectShipCollisionOnMap(aPlayer->getCursorPosition().x, aPlayer->getCursorPosition().y, currentShipLength, placeVertical)) {
           // place ship
-          aPlayer->addShip(aPlayer->getCursorPosition().x, aPlayer->getCursorPosition().y, currentShipLength, shipCount-1, placeVertical);
+          aPlayer->addShip(aPlayer->getCursorPosition().x, aPlayer->getCursorPosition().y, currentShipLength, placeVertical);
 
           shipCount--;
           break;
@@ -220,7 +267,7 @@ void BSGame::createMapForAI(){
     // place ship
     if (!player2.detectShipCollisionOnMap(shipPos.x, shipPos.y, currentShipLength, placeVertical)) {
       // place ship
-      player2.addShip(shipPos.x, shipPos.y, currentShipLength, shipCount-1, placeVertical);
+      player2.addShip(shipPos.x, shipPos.y, currentShipLength, placeVertical);
 
       shipCount--;
     }
@@ -303,6 +350,61 @@ void BSGame::showTurnOfPlayer(BSPlayer *aPlayer, BSPlayer *aOpponent){
   }
 }
 
+void BSGame::showTurnOfAI(){
+  // point where the map will be drawn
+  Point cameraPosition = {0,0};
+  Point aimedCursor = gameAI->getNextShotPosition();
+  Point currentCursor = player2.getCursorPosition();
+  Point deltaCursor = aimedCursor;
+  deltaCursor.x -= currentCursor.x;
+  deltaCursor.y -= currentCursor.y;
+
+  // animators
+  bool animatorCursor = false;
+
+  uint64_t deltaTime = 0;
+  const uint16_t animationDuration = 5000;
+  uint64_t animationStart = millis();
+
+  // Game loop
+  while(true){
+
+    // wait for next frame with drawing
+    if (!arduboy.nextFrame()) continue;
+
+    // get deltatime
+    deltaTime = MILLIS_SINCE(animationStart);
+
+    // handle animators
+    // cursor
+    if (arduboy.everyXFrames(CURSOR_ANIMATION_TIME)) animatorCursor = !animatorCursor;
+
+    // Drawing
+    arduboy.clear();
+
+    // Map
+    // tile height is 32 and width 16
+    cameraPosition.x = mapOrigin.x - (currentCursor.x - currentCursor.y)*16;
+    cameraPosition.y = mapOrigin.y - (currentCursor.x + currentCursor.y)*8;
+
+    drawMapAtPosition(cameraPosition.x, cameraPosition.y, &player1, false);
+
+    if(animatorCursor) arduboy.drawBitmap(mapOrigin.x, mapOrigin.y+16, BitmapCursorDotted32x16, 32, 16, WHITE);
+
+    // Infobox
+    arduboy.fillRect(73,0,55,19,WHITE);
+    arduboy.fillRect(74,0,54,18,BLACK);
+
+    // Print palyername
+    tinyfont.setCursor(76,3);
+    tinyfont.print(player2.getPlayerName());
+
+    tinyfont.setCursor(76,10);
+    tinyfont.print(F("AIM!"));
+
+    arduboy.display();
+  }
+}
 
 BSGameState BSGame::showAimMenuOnPlayersMap(Point mapOrigin, Point cursorPos, BSPlayer *aPlayer){
   //handle submenu

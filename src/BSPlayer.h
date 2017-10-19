@@ -14,7 +14,7 @@ public:
   void resetPlayer();
 
   // Stores a ship to the map
-  void addShip(uint8_t posX, uint8_t posY, uint8_t length, uint8_t shipIndex, bool vertical);
+  void addShip(uint8_t posX, uint8_t posY, uint8_t length, bool vertical);
 
   // returns true if that tile contains a ship
   bool isShipTileAtPosition(uint8_t posX, uint8_t posY);
@@ -39,15 +39,32 @@ public:
   uint8_t getRemainingShips();
 
   // accessor for cursor
+  // position in dimensions of BS_MAP_SIZE
   Point getCursorPosition();
   void setCursorPosition(Point newPosition);
+
+  // accessors for number of turns
+  uint8_t getNumberOfTurns();
+  void setNumberOfTurns(uint8_t turns);
+
+  // accessors for number of turns
+  uint8_t getRemainingShipTiles();
 
 private:
   // stores the players map
   uint16_t playerMap[BS_MAP_SIZE][BS_MAP_SIZE] = {{0}};
   char *playerName;
+
+  // stores data
+  uint8_t shipLenghts[BS_SHIPS_PER_PLAYER];
   uint8_t remainingShips;
+  uint8_t remainingShipTiles;
+
+  // stores the cursor position
   Point cursorPosition;
+
+  // standard 1 but may be more for future versions
+  uint8_t numberOfTurns;
 };
 
 #endif

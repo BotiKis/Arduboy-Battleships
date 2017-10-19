@@ -4,6 +4,7 @@
 #include <Tinyfont.h>
 #include "BSArdBitmap.h"
 #include "BSPlayer.h"
+#include "BSGameAI.h"
 
 // helper to calc deltatime
 #define MILLIS_SINCE(MILLIS) (millis() - MILLIS)
@@ -47,6 +48,7 @@ private:
 
     void showPlaceShipsForPlayer(BSPlayer *aPlayer);
     void showTurnOfPlayer(BSPlayer *aPlayer, BSPlayer *aOpponent);
+    void showTurnOfAI();
 
     /// Draws the full explosion animation on screen
     BSGameState showAimMenuOnPlayersMap(Point mapOrigin, Point cursorPos, BSPlayer *aPlayer);
@@ -83,6 +85,9 @@ private:
     // players
     BSPlayer player1;
     BSPlayer player2;
+
+    // AI
+    BSGameAI *gameAI = NULL; // init and release on need
 
     // default position of the map
     const Point mapOrigin = {26, 0};

@@ -3,6 +3,7 @@
 BSPlayer::BSPlayer(){
   resetPlayer();
   playerName = new char[PLAYERNAME_LENGTH+1];
+  numberOfTurns = 1;
 }
 
 BSPlayer::~BSPlayer(){
@@ -21,6 +22,10 @@ void BSPlayer::resetPlayer(){
 
   // reset shipCount
   remainingShips = 0;
+  remainingShipTiles = 0;
+  for (uint8_t i = 0; i < BS_SHIPS_PER_PLAYER; i++) {
+    shipLenghts[i] = 0;
+  }
 
   // place random mountains
   for (uint8_t i = 0; i < 3;) {
@@ -34,7 +39,7 @@ void BSPlayer::resetPlayer(){
   }
 }
 
-void BSPlayer::addShip(uint8_t posX, uint8_t posY, uint8_t length, uint8_t shipIndex , bool vertical){
+void BSPlayer::addShip(uint8_t posX, uint8_t posY, uint8_t length, bool vertical){
   uint8_t x, y;
   for (uint8_t i = 0; i < length; i++) {
 
@@ -49,7 +54,7 @@ void BSPlayer::addShip(uint8_t posX, uint8_t posY, uint8_t length, uint8_t shipI
     tileData |= (MAP_TILE_TYPE_SHIP << MAP_TILE_TYPE_POS);
 
     // Ships index
-    tileData |= ( (shipIndex & 0b111) << MAP_SHIP_INDEX_BIT_POS);
+    tileData |= ( (remainingShips & 0b111) << MAP_SHIP_INDEX_BIT_POS);
 
     // ship length
     tileData |= ( (length & 0b111) << MAP_SHIPLENGTH_BIT_POS);
@@ -64,6 +69,8 @@ void BSPlayer::addShip(uint8_t posX, uint8_t posY, uint8_t length, uint8_t shipI
     playerMap[y][x] = tileData;
   }
 
+  shipLenghts[remainingShips] = length;
+  remainingShipTiles += length;
   remainingShips++;
 }
 
@@ -85,27 +92,25 @@ bool BSPlayer::destroyTileAtPosition(uint8_t posX, uint8_t posY){
       // mark shiptile as destroyed
       playerMap[posY][posX] |= MAP_FLAG_IS_DESTROYED;
 
+      // decrement shiptiles
+      remainingShipTiles = max(0, remainingShipTiles-1);
+
       // check if ship have remaining tiles
+      // get ships index
       uint8_t shipIndex = MAP_SHIP_INDEX(playerMap[posY][posX]);
-      uint16_t currentTile = 0;
 
-      for (uint8_t i = 0; i < BS_MAP_SIZE; i++) {
-        for (uint8_t j = 0; j < BS_MAP_SIZE; j++) {
-          if (isShipTileAtPosition(j,i)) {
-            currentTile = playerMap[i][j];
-            if (MAP_SHIP_INDEX(currentTile) == shipIndex && !(currentTile & MAP_FLAG_IS_DESTROYED)) {
-              return false;
-            }
-          }
-        }
+      // decrement ship length
+      shipLenghts[shipIndex] = max(0, shipLenghts[shipIndex]-1);
+
+      if (shipLenghts[shipIndex] == 0) {
+        // if we are here, there are no remaining shipTiles with the same index
+        // so the ship has been sunk
+        // decrease shipcount
+        remainingShips = max(0, remainingShips-1);
+        return true;
       }
-
-      // if we are here, there are no remaining shipTiles with the same index
-      // so the ship has been sunk
-      // decrease shipcount
-      remainingShips = max(0, remainingShips-1);
-      return true;
   }
+  return false;
 }
 
 bool BSPlayer::detectShipCollisionOnMap(uint8_t posX, uint8_t posY, uint8_t length, bool vertical){
@@ -151,6 +156,11 @@ uint8_t BSPlayer::getRemainingShips(){
   return remainingShips;
 }
 
+// accessors for number of turns
+uint8_t BSPlayer::getRemainingShipTiles(){
+  return remainingShipTiles;
+}
+
 Point BSPlayer::getCursorPosition(){
   return cursorPosition;
 }
@@ -158,4 +168,12 @@ Point BSPlayer::getCursorPosition(){
 void BSPlayer::setCursorPosition(Point newPosition){
   cursorPosition.x = newPosition.x;
   cursorPosition.y = newPosition.y;
+}
+
+uint8_t BSPlayer::getNumberOfTurns(){
+  return numberOfTurns;
+}
+
+void BSPlayer::setNumberOfTurns(uint8_t turns){
+  numberOfTurns = turns;
 }
