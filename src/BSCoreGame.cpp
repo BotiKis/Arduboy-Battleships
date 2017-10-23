@@ -20,6 +20,7 @@ void BSGame::startNewSinglePlayerGame(){
 
   // place AI
   createMapForAI();
+  gameAI->createProbabilityMap();
 
   // run game
   runSinglePlayerGame();

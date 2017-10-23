@@ -17,6 +17,9 @@ public:
   // Returns coordinates in dimensions of BS_MAP_SIZE
   Point getNextShotPosition();
 
+  void createProbabilityMap();
+  void udpateProbabilityMap();
+
 private:
   // stores the probabilities
   // values 0-100 tell the chance of hitting
@@ -26,6 +29,7 @@ private:
   // enemy playerMap
   // needed for ships left and moutain positions, no cheating promissed ;)
   BSPlayer *enemyPlayer;
+  bool shipFitsAtPosition(uint8_t posX, uint8_t posY, uint8_t length, bool vertical);
 };
 
 #endif

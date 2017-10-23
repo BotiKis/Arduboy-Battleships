@@ -22,9 +22,9 @@ void BSPlayer::resetPlayer(){
 
   // reset shipCount
   remainingShips = 0;
-  remainingShipTiles = 0;
   for (uint8_t i = 0; i < BS_SHIPS_PER_PLAYER; i++) {
     shipLenghts[i] = 0;
+    remainingShipTiles[i] = 0;
   }
 
   // place random mountains
@@ -70,7 +70,7 @@ void BSPlayer::addShip(uint8_t posX, uint8_t posY, uint8_t length, bool vertical
   }
 
   shipLenghts[remainingShips] = length;
-  remainingShipTiles += length;
+  remainingShipTiles[remainingShips] = length;
   remainingShips++;
 }
 
@@ -88,27 +88,25 @@ bool BSPlayer::destroyTileAtPosition(uint8_t posX, uint8_t posY){
     if (playerMap[posY][posX] & MAP_FLAG_IS_DESTROYED)
       // ignore if already destroyed
       return false;
-    else
+    else{
       // mark shiptile as destroyed
       playerMap[posY][posX] |= MAP_FLAG_IS_DESTROYED;
-
-      // decrement shiptiles
-      remainingShipTiles = max(0, remainingShipTiles-1);
 
       // check if ship have remaining tiles
       // get ships index
       uint8_t shipIndex = MAP_SHIP_INDEX(playerMap[posY][posX]);
 
-      // decrement ship length
-      shipLenghts[shipIndex] = max(0, shipLenghts[shipIndex]-1);
+      // decrement shiptiles
+      remainingShipTiles[shipIndex] = max(0, remainingShipTiles[shipIndex]-1);
 
-      if (shipLenghts[shipIndex] == 0) {
+      if (remainingShipTiles[shipIndex] == 0) {
         // if we are here, there are no remaining shipTiles with the same index
         // so the ship has been sunk
         // decrease shipcount
         remainingShips = max(0, remainingShips-1);
         return true;
       }
+    }
   }
   return false;
 }
@@ -158,7 +156,11 @@ uint8_t BSPlayer::getRemainingShips(){
 
 // accessors for number of turns
 uint8_t BSPlayer::getRemainingShipTiles(){
-  return remainingShipTiles;
+  uint8_t sum = 0;
+  for (uint8_t i = 0; i < BS_SHIPS_PER_PLAYER; i++) {
+    sum += remainingShipTiles[i];
+  }
+  return sum;
 }
 
 Point BSPlayer::getCursorPosition(){
@@ -176,4 +178,16 @@ uint8_t BSPlayer::getNumberOfTurns(){
 
 void BSPlayer::setNumberOfTurns(uint8_t turns){
   numberOfTurns = turns;
+}
+
+uint8_t BSPlayer::getRemainingShipLenghtAtIndex(uint8_t idx){
+  // safety check
+  if (idx >= BS_SHIPS_PER_PLAYER) return 0;
+  return remainingShipTiles[idx];
+}
+
+uint8_t BSPlayer::getShipLenghtAtIndex(uint8_t idx){
+  // safety check
+  if (idx >= BS_SHIPS_PER_PLAYER) return 0;
+  return shipLenghts[idx];
 }

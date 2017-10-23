@@ -50,15 +50,22 @@ public:
   // accessors for number of turns
   uint8_t getRemainingShipTiles();
 
+  // accessors for shiplenghts
+  uint8_t getShipLenghtAtIndex(uint8_t idx);
+  uint8_t getRemainingShipLenghtAtIndex(uint8_t idx);
+
 private:
   // stores the players map
   uint16_t playerMap[BS_MAP_SIZE][BS_MAP_SIZE] = {{0}};
   char *playerName;
 
   // stores data
+  // the original ship lenghts
   uint8_t shipLenghts[BS_SHIPS_PER_PLAYER];
+
+  // the actual ship length
+  uint8_t remainingShipTiles[BS_SHIPS_PER_PLAYER];
   uint8_t remainingShips;
-  uint8_t remainingShipTiles;
 
   // stores the cursor position
   Point cursorPosition;
