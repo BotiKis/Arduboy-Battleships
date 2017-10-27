@@ -5,9 +5,10 @@
 #include "BSPlayer.h"
 
 typedef enum AITileValue{
-  AITileValueShipSunk   = -3,
-  AITileValueShipHit    = -2,
-  AITileValueMountain   = -1,
+  AITileValueMountain   = -4,
+  AITileValueShipHit    = -3,
+  AITileValueShipSunk   = -2,
+  AITileValueMiss       = -1,
   AITileValue0 = 0
 }AITileValue;
 
@@ -19,6 +20,7 @@ public:
 
   void createProbabilityMap();
   void udpateProbabilityMap();
+  void markCoordinatesAs(Point location, AITileValue tileValue);
 
 private:
   // stores the probabilities
@@ -30,6 +32,29 @@ private:
   // needed for ships left and moutain positions, no cheating promissed ;)
   BSPlayer *enemyPlayer;
   bool shipFitsAtPosition(uint8_t posX, uint8_t posY, uint8_t length, bool vertical);
+};
+
+class BSProbabilityCoordinate{
+public:
+  BSProbabilityCoordinate();
+  BSProbabilityCoordinate(Point p, int8_t prob);
+  int16_t x,y;
+  int8_t probability;
+};
+
+#define BS_MAX_STACK_SIZE 8
+class BSProbabilityStack{
+public:
+  void add(BSProbabilityCoordinate coord);
+  BSProbabilityCoordinate getHighest();
+  BSProbabilityCoordinate getLowest();
+  int8_t getLowestIndex();
+  BSProbabilityCoordinate getRandom();
+  void reset();
+
+private:
+  uint8_t count;
+  BSProbabilityCoordinate coordinates[BS_MAX_STACK_SIZE];
 };
 
 #endif
