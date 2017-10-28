@@ -94,7 +94,6 @@ bool BSGameAI::shipFitsAtPosition(uint8_t posX, uint8_t posY, uint8_t length, bo
     // check for obstacle
     if(probabilityMap[y][x] == AITileValueMountain) return false;
     if(probabilityMap[y][x] == AITileValueShipHit) return false;
-    if(probabilityMap[y][x] == AITileValueShipSunk) return false;
     if(probabilityMap[y][x] == AITileValueMiss) return false;
   }
   return true;

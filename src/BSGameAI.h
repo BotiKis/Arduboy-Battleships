@@ -5,9 +5,8 @@
 #include "BSPlayer.h"
 
 typedef enum AITileValue{
-  AITileValueMountain   = -4,
   AITileValueShipHit    = -3,
-  AITileValueShipSunk   = -2,
+  AITileValueMountain   = -2,
   AITileValueMiss       = -1,
   AITileValue0 = 0
 }AITileValue;

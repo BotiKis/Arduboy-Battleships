@@ -55,6 +55,7 @@ void BSGame::runSinglePlayerGame(){
       }
       else{
         // AI
+        showTurnOfAI();
       }
 
       // check for end
@@ -354,9 +355,9 @@ void BSGame::showTurnOfPlayer(BSPlayer *aPlayer, BSPlayer *aOpponent){
 void BSGame::showTurnOfAI(){
   // point where the map will be drawn
   Point cameraPosition = {0,0};
-  Point aimedCursor = gameAI->getNextShotPosition();
+  Point aimedCursorPosition = gameAI->getNextShotPosition();
   Point currentCursor = player2.getCursorPosition();
-  Point deltaCursor = aimedCursor;
+  Point deltaCursor = aimedCursorPosition;
   deltaCursor.x -= currentCursor.x;
   deltaCursor.y -= currentCursor.y;
 
@@ -368,43 +369,66 @@ void BSGame::showTurnOfAI(){
   uint64_t animationStart = millis();
 
   // Game loop
-  while(true){
+  // while(true){
+  //
+  //   // wait for next frame with drawing
+  //   if (!arduboy.nextFrame()) continue;
+  //
+  //   // get deltatime
+  //   deltaTime = MILLIS_SINCE(animationStart);
+  //
+  //   // handle animators
+  //   // cursor
+  //   if (arduboy.everyXFrames(CURSOR_ANIMATION_TIME)) animatorCursor = !animatorCursor;
+  //
+  //   // Drawing
+  //   arduboy.clear();
+  //
+  //   // Map
+  //   // tile height is 32 and width 16
+  //   cameraPosition.x = mapOrigin.x - (currentCursor.x - currentCursor.y)*16;
+  //   cameraPosition.y = mapOrigin.y - (currentCursor.x + currentCursor.y)*8;
+  //
+  //   drawMapAtPosition(cameraPosition.x, cameraPosition.y, &player1, false);
+  //
+  //   if(animatorCursor) arduboy.drawBitmap(mapOrigin.x, mapOrigin.y+16, BitmapCursorDotted32x16, 32, 16, WHITE);
+  //
+  //   // Infobox
+  //   arduboy.fillRect(73,0,55,19,WHITE);
+  //   arduboy.fillRect(74,0,54,18,BLACK);
+  //
+  //   // Print palyername
+  //   tinyfont.setCursor(76,3);
+  //   tinyfont.print(player2.getPlayerName());
+  //
+  //   tinyfont.setCursor(76,10);
+  //   tinyfont.print(F("AIM!"));
+  //
+  //   arduboy.display();
+  // }
 
-    // wait for next frame with drawing
-    if (!arduboy.nextFrame()) continue;
+  // draw rocket and explosion
 
-    // get deltatime
-    deltaTime = MILLIS_SINCE(animationStart);
+  arduboy.clear();
+  drawMapAtPosition(cameraPosition.x, cameraPosition.y, &player1, false);
+  arduboy.display();
+  drawExplosionAnimation(mapOrigin, aimedCursorPosition, &player1);
 
-    // handle animators
-    // cursor
-    if (arduboy.everyXFrames(CURSOR_ANIMATION_TIME)) animatorCursor = !animatorCursor;
-
-    // Drawing
-    arduboy.clear();
-
-    // Map
-    // tile height is 32 and width 16
-    cameraPosition.x = mapOrigin.x - (currentCursor.x - currentCursor.y)*16;
-    cameraPosition.y = mapOrigin.y - (currentCursor.x + currentCursor.y)*8;
-
-    drawMapAtPosition(cameraPosition.x, cameraPosition.y, &player1, false);
-
-    if(animatorCursor) arduboy.drawBitmap(mapOrigin.x, mapOrigin.y+16, BitmapCursorDotted32x16, 32, 16, WHITE);
-
-    // Infobox
-    arduboy.fillRect(73,0,55,19,WHITE);
-    arduboy.fillRect(74,0,54,18,BLACK);
-
-    // Print palyername
-    tinyfont.setCursor(76,3);
-    tinyfont.print(player2.getPlayerName());
-
-    tinyfont.setCursor(76,10);
-    tinyfont.print(F("AIM!"));
-
-    arduboy.display();
+  // check for shipSprite
+  if (player1.isShipTileAtPosition(aimedCursorPosition.x, aimedCursorPosition.y)) {
+    player1.destroyTileAtPosition(aimedCursorPosition.x, aimedCursorPosition.y);
+    gameAI->markCoordinatesAs(aimedCursorPosition, AITileValueShipHit);
   }
+  else{
+    player1.setMapTileAtPosition(aimedCursorPosition.y, aimedCursorPosition.x, MAP_TILE_TYPE_MISS);
+    gameAI->markCoordinatesAs(aimedCursorPosition, AITileValueMiss);
+  }
+
+  arduboy.clear();
+  drawMapAtPosition(cameraPosition.x, cameraPosition.y, &player1, false);
+  arduboy.display();
+
+  delay(600);
 }
 
 BSGameState BSGame::showAimMenuOnPlayersMap(Point mapOrigin, Point cursorPos, BSPlayer *aPlayer){
