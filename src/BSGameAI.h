@@ -4,12 +4,12 @@
 #include "BSMapTileData.h"
 #include "BSPlayer.h"
 
-typedef enum AITileValue{
-  AITileValueShipHit    = -3,
-  AITileValueMountain   = -2,
-  AITileValueMiss       = -1,
-  AITileValue0 = 0
-}AITileValue;
+enum class AITileValue: int8_t{
+  ShipHit    = -3,
+  Mountain   = -2,
+  Miss       = -1,
+  Zero       =  0
+};
 
 class BSGameAI{
 public:
@@ -25,7 +25,7 @@ private:
   // stores the probabilities
   // values 0-100 tell the chance of hitting
   // values < 0 tell states defined by AITileValue
-  int8_t probabilityMap[BS_MAP_SIZE][BS_MAP_SIZE];
+  AITileValue probabilityMap[BS_MAP_SIZE][BS_MAP_SIZE];
 
   // enemy playerMap
   // needed for ships left and moutain positions, no cheating promissed ;)

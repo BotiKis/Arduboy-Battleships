@@ -10,7 +10,7 @@ BSGameAI::BSGameAI(BSPlayer *enemy){
       // check for mountains
       currentTile = enemyPlayer->getMapTileAtPosition(x, y);
       if (MAP_TILE_TYPE(currentTile) == MAP_TILE_TYPE_MOUNTAIN){
-        probabilityMap[y][x] = AITileValueMountain;
+        probabilityMap[y][x] = AITileValue::Mountain;
       }
     }
   }
@@ -22,7 +22,7 @@ BSProbabilityStack probabilities;
   // go through whole map and get highest probability
   for (uint8_t y = 0; y < BS_MAP_SIZE; y++) {
     for (uint8_t x = 0; x < BS_MAP_SIZE; x++) {
-      BSProbabilityCoordinate coord({x,y}, probabilityMap[y][x]);
+      BSProbabilityCoordinate coord({x,y}, static_cast<int8_t>(probabilityMap[y][x]));
       probabilities.add(coord);
     }
   }
@@ -32,7 +32,7 @@ BSProbabilityStack probabilities;
 }
 
 void BSGameAI::markCoordinatesAs(Point location, AITileValue tileValue){
-  probabilityMap[location.y][location.x] = ((int8_t)tileValue);
+  probabilityMap[location.y][location.x] = tileValue;
   createProbabilityMap();
 }
 
@@ -53,14 +53,16 @@ void BSGameAI::createProbabilityMap(){
           // Horizontal
           if (shipFitsAtPosition(x, y, shipLength, false)){
             for (uint8_t tilePos = 0; tilePos < shipLength; tilePos++) {
-              probabilityMap[y][x+tilePos] += 1;
+              int8_t localProbability = static_cast<int8_t>(probabilityMap[y][x+tilePos]);
+              probabilityMap[y][x+tilePos] = static_cast<AITileValue>(localProbability + 1);
             }
           }
 
           // vertical
           if (shipFitsAtPosition(x, y, shipLength, true)){
             for (uint8_t tilePos = 0; tilePos < shipLength; tilePos++) {
-              probabilityMap[y+tilePos  ][x] += 1;
+              int8_t localProbability = static_cast<int8_t>(probabilityMap[y+tilePos][x]);
+              probabilityMap[y+tilePos][x] = static_cast<AITileValue>(localProbability + 1);
             }
           }
 
@@ -92,9 +94,9 @@ bool BSGameAI::shipFitsAtPosition(uint8_t posX, uint8_t posY, uint8_t length, bo
     y = posY + (vertical?i:0);
 
     // check for obstacle
-    if(probabilityMap[y][x] == AITileValueMountain) return false;
-    if(probabilityMap[y][x] == AITileValueShipHit) return false;
-    if(probabilityMap[y][x] == AITileValueMiss) return false;
+    if(probabilityMap[y][x] == AITileValue::Mountain) return false;
+    if(probabilityMap[y][x] == AITileValue::ShipHit) return false;
+    if(probabilityMap[y][x] == AITileValue::Miss) return false;
   }
   return true;
 }

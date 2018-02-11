@@ -23,7 +23,7 @@ BSGame::BSGame(){
   arduboy.initRandomSeed();
   arduboy.audio.on();
   arduboy.invert(true);
-  gameState = BSGameStateMenu;
+  gameState = BSGameState::Menu;
 }
 
 // -------------------------------------------------------
@@ -36,23 +36,23 @@ void BSGame::run(){
   while(true){
 
       switch (gameState) {
-        case BSGameStatePlayingSinglePlayer:{
+        case BSGameState::SinglePlayer:{
           // start game
           startNewSinglePlayerGame();
-          this->gameState = BSGameStateMenu;
+          this->gameState = BSGameState::Menu;
           break;
         }
-        case BSGameStatePlayingMultiPlayer:{
+        case BSGameState::MultiPlayer:{
           startNewMultiPlayerGame();
-          this->gameState = BSGameStateMenu;
+          this->gameState = BSGameState::Menu;
           break;
         }
-        case BSGameStateOptions:{
+        case BSGameState::Options:{
           showOKDialog("Options here");
-          this->gameState = BSGameStateMenu;
+          this->gameState = BSGameState::Menu;
           break;
         }
-        case BSGameStateMenu:
+        case BSGameState::Menu:
         default:
           this->gameState = showMenu();
       }
@@ -82,11 +82,11 @@ BSGameState BSGame::showMenu(){
 
       // Single player
       if (cursorIdx == 0)
-        return BSGameStatePlayingSinglePlayer;
+        return BSGameState::SinglePlayer;
       if (cursorIdx == 1)
-        return BSGameStatePlayingMultiPlayer;
+        return BSGameState::MultiPlayer;
       if (cursorIdx == 2)
-        return BSGameStateOptions;
+        return BSGameState::Options;
 
     }
     cursorIdx = cursorIdx%3;

@@ -296,7 +296,7 @@ void BSGame::showTurnOfPlayer(BSPlayer *aPlayer, BSPlayer *aOpponent){
 
     // show dialog to fire
     if (arduboy.justPressed(B_BUTTON)){
-      if(showAimMenuOnPlayersMap(mapOrigin, aPlayer->getCursorPosition(), aOpponent) == BSGameStatePlayingNextTurn) return;
+      if(showAimMenuOnPlayersMap(mapOrigin, aPlayer->getCursorPosition(), aOpponent) == BSGameState::PlayingNextTurn) return;
     }
 
     // Move cursor
@@ -410,25 +410,28 @@ void BSGame::showTurnOfAI(){
   // draw rocket and explosion
 
   arduboy.clear();
-  drawMapAtPosition(cameraPosition.x, cameraPosition.y, &player1, false);
+  drawMapAtPosition(aimedCursorPosition.x, aimedCursorPosition.y, &player1, false);
   arduboy.display();
   drawExplosionAnimation(mapOrigin, aimedCursorPosition, &player1);
 
   // check for shipSprite
   if (player1.isShipTileAtPosition(aimedCursorPosition.x, aimedCursorPosition.y)) {
     player1.destroyTileAtPosition(aimedCursorPosition.x, aimedCursorPosition.y);
-    gameAI->markCoordinatesAs(aimedCursorPosition, AITileValueShipHit);
+    gameAI->markCoordinatesAs(aimedCursorPosition, AITileValue::ShipHit);
   }
   else{
     player1.setMapTileAtPosition(aimedCursorPosition.y, aimedCursorPosition.x, MAP_TILE_TYPE_MISS);
-    gameAI->markCoordinatesAs(aimedCursorPosition, AITileValueMiss);
+    gameAI->markCoordinatesAs(aimedCursorPosition, AITileValue::Miss);
   }
 
+  // store cursor position
+  player2.setCursorPosition(aimedCursorPosition);
+
   arduboy.clear();
-  drawMapAtPosition(cameraPosition.x, cameraPosition.y, &player1, false);
+  drawMapAtPosition(aimedCursorPosition.x, aimedCursorPosition.y, &player1, false);
   arduboy.display();
 
-  delay(600);
+  delay(6000);
 }
 
 BSGameState BSGame::showAimMenuOnPlayersMap(Point mapOrigin, Point cursorPos, BSPlayer *aPlayer){
@@ -494,15 +497,15 @@ BSGameState BSGame::showAimMenuOnPlayersMap(Point mapOrigin, Point cursorPos, BS
         delay(600);
         showOKDialog(dialogText);
 
-        return BSGameStatePlayingNextTurn;
+        return BSGameState::PlayingNextTurn;
       }
       // cancel sub menu
       if (menuCursorIdx == 1)
-        return BSGameStatePlayingCancelAction;
+        return BSGameState::PlayingCancelAction;
     }
     // cancel on A
     if (arduboy.justPressed(A_BUTTON))
-      return BSGameStatePlayingCancelAction;
+      return BSGameState::PlayingCancelAction;
 
     arduboy.clear();
 

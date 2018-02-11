@@ -16,14 +16,14 @@ static inline bool pointIsEqualToPoint(Point a, Point b){
 
 const char* shipNameForLength(uint8_t length);
 
-typedef enum BSGameState{
-  BSGameStateMenu = 0,
-  BSGameStatePlayingSinglePlayer,
-  BSGameStatePlayingMultiPlayer,
-  BSGameStatePlayingNextTurn,
-  BSGameStatePlayingCancelAction,
-  BSGameStateOptions
-}BSGameState;
+enum class BSGameState:uint8_t{
+  Menu = 0,
+  SinglePlayer,
+  MultiPlayer,
+  PlayingNextTurn,
+  PlayingCancelAction,
+  Options
+};
 
 class BSGame{
   public:
@@ -87,7 +87,7 @@ private:
     BSPlayer player2;
 
     // AI
-    BSGameAI *gameAI = NULL; // init and release on need
+    BSGameAI *gameAI = nullptr; // init and release on need
 
     // default position of the map
     const Point mapOrigin = {26, 0};
