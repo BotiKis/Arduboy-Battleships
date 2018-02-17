@@ -274,7 +274,7 @@ void BSGame::drawExplosionAnimation(Point mapOrigin, Point cursorPos, BSPlayer *
   Point rocketStartPosition = {mapOrigin.x+24, -20};
   Point rocketEndPosition = {mapOrigin.x+15, mapOrigin.y+8};
 
-  Point explosionPosition = {mapOrigin.x, mapOrigin.y-18};
+  Point explosionPosition = {mapOrigin.x-8, mapOrigin.y-18};
 
   // set up animation
   uint64_t deltaTime = 0;
@@ -309,20 +309,20 @@ void BSGame::drawExplosionAnimation(Point mapOrigin, Point cursorPos, BSPlayer *
 
     // draw explosions
     if (deltaTime > rocketFlyTime && deltaTime <= (rocketFlyTime+explosionPhase1) ) {
-      ardbitmap.drawCompressed(explosionPosition.x, explosionPosition.y, BitmapExplosion1Mask32x48, BLACK);
-      ardbitmap.drawCompressed(explosionPosition.x, explosionPosition.y, BitmapExplosion132x48, WHITE);
+      ardbitmap.drawCompressed(explosionPosition.x, explosionPosition.y, BitmapExplosion1Mask48x48, BLACK);
+      ardbitmap.drawCompressed(explosionPosition.x, explosionPosition.y, BitmapExplosion148x48, WHITE);
     }
     else if (deltaTime > (rocketFlyTime+explosionPhase1) && deltaTime <= (rocketFlyTime+explosionPhase1+explosionPhase2) ) {
-      ardbitmap.drawCompressed(explosionPosition.x, explosionPosition.y, BitmapExplosion2Mask32x48, BLACK);
-      ardbitmap.drawCompressed(explosionPosition.x, explosionPosition.y, BitmapExplosion232x48, WHITE);
+      ardbitmap.drawCompressed(explosionPosition.x, explosionPosition.y, BitmapExplosion2Mask48x48, BLACK);
+      ardbitmap.drawCompressed(explosionPosition.x, explosionPosition.y, BitmapExplosion248x48, WHITE);
     }
     else if (deltaTime > (rocketFlyTime+explosionPhase1+explosionPhase2) && deltaTime <= (rocketFlyTime+explosionPhase1+explosionPhase2+explosionPhase3) ) {
-      ardbitmap.drawCompressed(explosionPosition.x, explosionPosition.y, BitmapExplosion3Mask32x48, BLACK);
-      ardbitmap.drawCompressed(explosionPosition.x, explosionPosition.y, BitmapExplosion332x48, WHITE);
+      ardbitmap.drawCompressed(explosionPosition.x, explosionPosition.y, BitmapExplosion3Mask48x48, BLACK);
+      ardbitmap.drawCompressed(explosionPosition.x, explosionPosition.y, BitmapExplosion348x48, WHITE);
     }
     else if (deltaTime > (rocketFlyTime+explosionPhase1+explosionPhase2+explosionPhase3) && deltaTime <= (rocketFlyTime+explosionPhase1+explosionPhase2+explosionPhase3+explosionPhase4) ) {
-      ardbitmap.drawCompressed(explosionPosition.x, explosionPosition.y, BitmapExplosion4Mask32x48, BLACK);
-      ardbitmap.drawCompressed(explosionPosition.x, explosionPosition.y, BitmapExplosion432x48, WHITE);
+      ardbitmap.drawCompressed(explosionPosition.x, explosionPosition.y, BitmapExplosion4Mask48x48, BLACK);
+      ardbitmap.drawCompressed(explosionPosition.x, explosionPosition.y, BitmapExplosion448x48, WHITE);
     }
 
 
