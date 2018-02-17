@@ -99,13 +99,13 @@ BSGameState BSGame::showMenu(){
     cursorIdx = cursorIdx%3;
 
     arduboy.clear();
-    float shipAnimTime = millis()/12000.0;
+    float shipAnimTime = millis()/6000.0;
     int shipAnimValue = sin( shipAnimTime * 2.0 * PI )*4;
 
-    float wavesBackAnimTime = millis()/24000.0;
+    float wavesBackAnimTime = millis()/12000.0;
     int wavesBackAnimValue = sin( wavesBackAnimTime * 2.0 * PI )*8+8;
 
-    float wavesFrontAnimTime = millis()/14000.0;
+    float wavesFrontAnimTime = millis()/8000.0;
     int wavesFrontAnimValue = sin( wavesFrontAnimTime * 2.0 * PI + PI/2)*8+8;
 
     // draw background
@@ -138,7 +138,7 @@ BSGameState BSGame::showMenu(){
     tinyfont.print(F("OPTIONS"));
 
     // draw cursor
-    if (millis()/1000%2)
+    if (millis()/200%2)
       arduboy.drawBitmap(126, menuY + cursorIdx*10, menuCursor2x8, 2, 8, WHITE);
 
     arduboy.display();
