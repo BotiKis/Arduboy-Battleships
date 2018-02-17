@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2016 Ignacio Vina (@igvina)
+   Copyright (C) 2016 Ignacio Vina (@igvina) <- hero, thank you!
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -57,6 +57,7 @@ class ArdBitmap
   public:
     ArdBitmap(uint8_t *screenBuffer, int16_t width, int16_t height);
     void drawCompressed(int16_t sx, int16_t sy, const uint8_t *compBitmap, uint8_t color, uint8_t align, uint8_t mirror);
+    void drawCompressed(int16_t sx, int16_t sy, const uint8_t *compBitmap, uint8_t color);
     void drawCompressedResized(int16_t sx, int16_t sy, const uint8_t *compBitmap, uint8_t color,uint8_t align, uint8_t mirror, float resize);
 
     void drawBitmap(int16_t sx, int16_t sy, const uint8_t *bitmap,uint8_t w, uint8_t h, uint8_t color, uint8_t align, uint8_t mirror);

@@ -2,6 +2,7 @@
 #include "BSIsometricBitmaps.h"
 #include "BSMapTileData.h"
 #include "BSAnimationHelper.h"
+#include "BSMenuAssets.h"
 
 // Shipnames
 const char* shipNameForLength(uint8_t length){
@@ -69,13 +70,19 @@ BSGameState BSGame::showMenu(){
 
   // Game loop
   while(true){
+
+    if (!arduboy.nextFrame()) continue;
+
     arduboy.pollButtons();
 
     if (arduboy.justPressed(DOWN_BUTTON)){
       cursorIdx++;
     }
     if (arduboy.justPressed(UP_BUTTON)){
-      cursorIdx--;
+      if (cursorIdx == 0)
+        cursorIdx = 2;
+      else
+        cursorIdx--;
     }
     if (arduboy.justPressed(B_BUTTON)){
       arduboy.initRandomSeed();
@@ -92,15 +99,47 @@ BSGameState BSGame::showMenu(){
     cursorIdx = cursorIdx%3;
 
     arduboy.clear();
+    float shipAnimTime = millis()/12000.0;
+    int shipAnimValue = sin( shipAnimTime * 2.0 * PI )*4;
 
-    tinyfont.setCursor(2, 47);
-    tinyfont.print(F("SINGLE PLAYER"));
-    tinyfont.setCursor(2, 53);
+    float wavesBackAnimTime = millis()/24000.0;
+    int wavesBackAnimValue = sin( wavesBackAnimTime * 2.0 * PI )*8+8;
+
+    float wavesFrontAnimTime = millis()/14000.0;
+    int wavesFrontAnimValue = sin( wavesFrontAnimTime * 2.0 * PI + PI/2)*8+8;
+
+    // draw background
+    ardbitmap.drawCompressed(0+wavesBackAnimValue, 42, menuWavesBack128x16, WHITE);
+    ardbitmap.drawCompressed(1, 3+shipAnimValue, menuShip76x64, BLACK);
+    ardbitmap.drawCompressed(0, 2+shipAnimValue, menuShip76x64, WHITE);
+    ardbitmap.drawCompressed(0+wavesFrontAnimValue-64, 47, menuWavesFront128x16, BLACK);
+    ardbitmap.drawCompressed(0+wavesFrontAnimValue+64, 47, menuWavesFront128x16, BLACK);
+    ardbitmap.drawCompressed(0+wavesFrontAnimValue-64, 48, menuWavesFront128x16, WHITE);
+    ardbitmap.drawCompressed(0+wavesFrontAnimValue+64, 48, menuWavesFront128x16, WHITE);
+
+    // draw title
+    ardbitmap.drawCompressed(54, 4, menuTitle72x8, WHITE);
+
+    // draw menu style
+    int8_t menuY = 16;
+    ardbitmap.drawCompressed(72, menuY, menuBoxMask56x8, BLACK);
+    ardbitmap.drawCompressed(72, menuY+10, menuBoxMask56x8, BLACK);
+    ardbitmap.drawCompressed(72, menuY+20, menuBoxMask56x8, BLACK);
+    ardbitmap.drawCompressed(72, menuY, menuBoxBorder56x8, WHITE);
+    ardbitmap.drawCompressed(72, menuY+10, menuBoxBorder56x8, WHITE);
+    ardbitmap.drawCompressed(72, menuY+20, menuBoxBorder56x8, WHITE);
+
+    // draw menu
+    tinyfont.setCursor(75, menuY+2);
+    tinyfont.print(F("ONE PLAYER"));
+    tinyfont.setCursor(75, menuY+12);
     tinyfont.print(F("TWO PLAYER"));
-    tinyfont.setCursor(2, 59);
+    tinyfont.setCursor(75, menuY+22);
     tinyfont.print(F("OPTIONS"));
-    tinyfont.setCursor(75, 47 + cursorIdx*6);
-    tinyfont.print("<");
+
+    // draw cursor
+    if (millis()/1000%2)
+      arduboy.drawBitmap(126, menuY + cursorIdx*10, menuCursor2x8, 2, 8, WHITE);
 
     arduboy.display();
   }
@@ -108,7 +147,7 @@ BSGameState BSGame::showMenu(){
 //
 void BSGame::drawMapAtPosition(int16_t posX, int16_t posY, BSPlayer *aPlayer, bool drawShips){
 
-  // stores the current maptile
+  // stores the cu brrent maptile
   uint16_t mapTile = 0;
   uint16_t mapTileType = 0;
   Point drawPosition = {0,0};
@@ -133,7 +172,7 @@ void BSGame::drawMapAtPosition(int16_t posX, int16_t posY, BSPlayer *aPlayer, bo
 
       // Check for mountain
       if (mapTileType == MAP_TILE_TYPE_MOUNTAIN){
-        ardbitmap.drawCompressed(drawPosition.x, drawPosition.y, BitmapMountainMask32x32, BLACK, ALIGN_H_LEFT, MIRROR_NONE);
+        ardbitmap.drawCompressed(drawPosition.x, drawPosition.y, BitmapMountainMask32x32, BLACK);
         arduboy.drawBitmap(drawPosition.x, drawPosition.y, BitmapMountain32x32, 32, 32, WHITE);
       }
 
@@ -144,15 +183,15 @@ void BSGame::drawMapAtPosition(int16_t posX, int16_t posY, BSPlayer *aPlayer, bo
 
         switch (animationStep) {
           case 0: {
-            ardbitmap.drawCompressed(drawPosition.x, drawPosition.y+16, BitmapWater132x16, WHITE, ALIGN_H_LEFT, MIRROR_NONE);
+            ardbitmap.drawCompressed(drawPosition.x, drawPosition.y+16, BitmapWater132x16, WHITE);
             break;
           }
           case 1: {
-            ardbitmap.drawCompressed(drawPosition.x, drawPosition.y+16, BitmapWater232x16, WHITE, ALIGN_H_LEFT, MIRROR_NONE);
+            ardbitmap.drawCompressed(drawPosition.x, drawPosition.y+16, BitmapWater232x16, WHITE);
             break;
           }
           case 2: {
-            ardbitmap.drawCompressed(drawPosition.x, drawPosition.y+16, BitmapWater332x16, WHITE, ALIGN_H_LEFT, MIRROR_NONE);
+            ardbitmap.drawCompressed(drawPosition.x, drawPosition.y+16, BitmapWater332x16, WHITE);
             break;
           }
           case 3:
@@ -184,7 +223,7 @@ void BSGame::drawMapAtPosition(int16_t posX, int16_t posY, BSPlayer *aPlayer, bo
         // check if it's destroyed
         if ((mapTile & MAP_FLAG_IS_DESTROYED) != 0) {
           shipDebriesAnimationFrame = ((currentTime/1000)+i+j)%2;
-          ardbitmap.drawCompressed(drawPosition.x, drawPosition.y, (shipDebriesAnimationFrame == 0)?BitmapShipDebries132x32:BitmapShipDebries232x32, WHITE, ALIGN_H_LEFT, MIRROR_NONE);
+          ardbitmap.drawCompressed(drawPosition.x, drawPosition.y, (shipDebriesAnimationFrame == 0)?BitmapShipDebries132x32:BitmapShipDebries232x32, WHITE);
           continue;
         }
 
@@ -270,20 +309,20 @@ void BSGame::drawExplosionAnimation(Point mapOrigin, Point cursorPos, BSPlayer *
 
     // draw explosions
     if (deltaTime > rocketFlyTime && deltaTime <= (rocketFlyTime+explosionPhase1) ) {
-      ardbitmap.drawCompressed(explosionPosition.x, explosionPosition.y, BitmapExplosion1Mask32x48, BLACK, ALIGN_H_LEFT, MIRROR_NONE);
-      ardbitmap.drawCompressed(explosionPosition.x, explosionPosition.y, BitmapExplosion132x48, WHITE, ALIGN_H_LEFT, MIRROR_NONE);
+      ardbitmap.drawCompressed(explosionPosition.x, explosionPosition.y, BitmapExplosion1Mask32x48, BLACK);
+      ardbitmap.drawCompressed(explosionPosition.x, explosionPosition.y, BitmapExplosion132x48, WHITE);
     }
     else if (deltaTime > (rocketFlyTime+explosionPhase1) && deltaTime <= (rocketFlyTime+explosionPhase1+explosionPhase2) ) {
-      ardbitmap.drawCompressed(explosionPosition.x, explosionPosition.y, BitmapExplosion2Mask32x48, BLACK, ALIGN_H_LEFT, MIRROR_NONE);
-      ardbitmap.drawCompressed(explosionPosition.x, explosionPosition.y, BitmapExplosion232x48, WHITE, ALIGN_H_LEFT, MIRROR_NONE);
+      ardbitmap.drawCompressed(explosionPosition.x, explosionPosition.y, BitmapExplosion2Mask32x48, BLACK);
+      ardbitmap.drawCompressed(explosionPosition.x, explosionPosition.y, BitmapExplosion232x48, WHITE);
     }
     else if (deltaTime > (rocketFlyTime+explosionPhase1+explosionPhase2) && deltaTime <= (rocketFlyTime+explosionPhase1+explosionPhase2+explosionPhase3) ) {
-      ardbitmap.drawCompressed(explosionPosition.x, explosionPosition.y, BitmapExplosion3Mask32x48, BLACK, ALIGN_H_LEFT, MIRROR_NONE);
-      ardbitmap.drawCompressed(explosionPosition.x, explosionPosition.y, BitmapExplosion332x48, WHITE, ALIGN_H_LEFT, MIRROR_NONE);
+      ardbitmap.drawCompressed(explosionPosition.x, explosionPosition.y, BitmapExplosion3Mask32x48, BLACK);
+      ardbitmap.drawCompressed(explosionPosition.x, explosionPosition.y, BitmapExplosion332x48, WHITE);
     }
     else if (deltaTime > (rocketFlyTime+explosionPhase1+explosionPhase2+explosionPhase3) && deltaTime <= (rocketFlyTime+explosionPhase1+explosionPhase2+explosionPhase3+explosionPhase4) ) {
-      ardbitmap.drawCompressed(explosionPosition.x, explosionPosition.y, BitmapExplosion4Mask32x48, BLACK, ALIGN_H_LEFT, MIRROR_NONE);
-      ardbitmap.drawCompressed(explosionPosition.x, explosionPosition.y, BitmapExplosion432x48, WHITE, ALIGN_H_LEFT, MIRROR_NONE);
+      ardbitmap.drawCompressed(explosionPosition.x, explosionPosition.y, BitmapExplosion4Mask32x48, BLACK);
+      ardbitmap.drawCompressed(explosionPosition.x, explosionPosition.y, BitmapExplosion432x48, WHITE);
     }
 
 

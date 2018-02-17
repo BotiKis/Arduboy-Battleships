@@ -7,6 +7,10 @@ ArdBitmap::ArdBitmap(uint8_t *screenBuffer, int16_t width, int16_t height){
   sHeight = height;
 }
 
+void ArdBitmap::drawCompressed(int16_t sx, int16_t sy, const uint8_t *compBitmap, uint8_t color){
+  drawCompressed(sx, sy, compBitmap, color, ALIGN_H_LEFT, MIRROR_NONE);
+}
+
 void ArdBitmap::drawCompressed(int16_t sx, int16_t sy, const uint8_t *compBitmap, uint8_t color, uint8_t align, uint8_t mirror)
 {
   //TODO: check why int16_t sizeCounter is a bit faster than uint16_t sizeCounter
@@ -266,10 +270,6 @@ void ArdBitmap::drawCompressedResized(int16_t sx, int16_t sy, const uint8_t *com
     sRow--;
     yOffset = 8 - yOffset;
   }
-
-  uint8_t data;
-  uint16_t bitmap_data;
-  uint8_t mul_amt = 1 << yOffset;
 
   int rows = h / 8;
   if (h % 8 != 0) rows++;
@@ -592,12 +592,10 @@ void ArdBitmap::drawBitmapResized(int16_t sx, int16_t sy, const uint8_t *bitmap,
   #endif
 
   //TODO: check why int16_t sizeCounter is a bit faster than uint16_t sizeCounter
-  int16_t sizeCounter;
   uint16_t len;
   uint8_t a, iCol;
   uint8_t data;
   uint8_t  wRes,  hRes;
-  uint8_t col;
 
   wRes = (uint8_t)(w * resize);
   hRes = (uint8_t)(h * resize);
